@@ -1,0 +1,48 @@
+# Xcode
+build/
+DerivedData/
+*.xcuserdata
+*.xcworkspace
+!*.xcodeproj/project.xcworkspace/
+xcuserdata/
+*.xccheckout
+*.moved-aside
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Swift Package Manager
+.build/
+Packages/
+Package.pins
+Package.resolved
+*.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/
+
+# CocoaPods
+Pods/
+
+# Carthage
+Carthage/Build/
+
+# OS
+.DS_Store
+*.swp
+*~
+._*
+
+# IDE
+.idea/
+*.pbxuser
+!default.pbxuser
+*.perspectivev3
+!default.perspectivev3
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+
+# Secrets
+*.p12
+*.mobileprovision
+*.key

@@ -1,0 +1,714 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		123615E639D9B7B045095EA4 /* NativeStatPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8C2E0336E54BCDD07087222 /* NativeStatPanel.swift */; };
+		13E4BFD4C419F04676ECD5D4 /* FolderManagementView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD8B16DE6879101D21AF83F4 /* FolderManagementView.swift */; };
+		1BE09CE4E80C79E9BEB25045 /* CreateAnnotationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C14975CC65260F7E2ADD8DF3 /* CreateAnnotationView.swift */; };
+		1C7C37945BC2D093B357D7A7 /* ServerSwitcherView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CEEE4F8C04808E783E80F26 /* ServerSwitcherView.swift */; };
+		22AF49B31297956A351CCB32 /* NativeGaugePanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D954B3184A490D1837D81C3B /* NativeGaugePanel.swift */; };
+		2405E3F9AA5236D6DC83E087 /* DashboardEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F10F6974089CABF30048148 /* DashboardEditView.swift */; };
+		25970FBA986FD51B01713E48 /* GrafanaAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000003 /* GrafanaAPIClient.swift */; };
+		3927567635429EE53F6B4E16 /* PanelCacheManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95777EFCAF2CDAEF5C2D782B /* PanelCacheManager.swift */; };
+		44AA315E87A7582D76EB182F /* HapticManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FE7D8AD3902F66DF6DB9F8D /* HapticManager.swift */; };
+		58584914F438E7D625C3E7FC /* GrafLensWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 27E977DD64ED8F07D12C622B /* GrafLensWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		632F2413244C8139DD55DA9D /* FavoritesManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F010CBF1F08E7E82EBC72AF3 /* FavoritesManager.swift */; };
+		742846ADADCC9A021E0B3F83 /* NativeBarChartPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35B63B8F78C1D8C4CA309964 /* NativeBarChartPanel.swift */; };
+		7759C5D6B874AEB85C43A1B4 /* GrafanaModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000002 /* GrafanaModels.swift */; };
+		793C053117D645CDCC572BA2 /* KeychainManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBF5CA90B5D6DFFECC61B3ED /* KeychainManager.swift */; };
+		8992D9DCD41D4F19CA27851E /* AlertsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 304CBEB6CB9FE94C464AED31 /* AlertsView.swift */; };
+		8B370E8553F1353DB5997B5B /* NativeTimeSeriesPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93D81C984BCDAD03572DB6F4 /* NativeTimeSeriesPanel.swift */; };
+		91971F74D287BB21C686E5E9 /* SharedDataManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 711CF58FD737D8F0ED4FD29B /* SharedDataManager.swift */; };
+		97AB2FC5849E9E5914B32110 /* CreateSilenceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30E359F9FE74B65C28F41800 /* CreateSilenceView.swift */; };
+		9CAA85A9FDDB39A7FCF91248 /* GrafLensWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60EAB3EB5A4BA209BA347130 /* GrafLensWidget.swift */; };
+		9EF061F5A45E9EA8C0A889AD /* PlaylistsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B97FA5A53F6AA5B2764F02B /* PlaylistsView.swift */; };
+		AA000001 /* GrafLensApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000001 /* GrafLensApp.swift */; };
+		AA000002 /* GrafanaModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000002 /* GrafanaModels.swift */; };
+		AA000003 /* GrafanaAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000003 /* GrafanaAPIClient.swift */; };
+		AA000004 /* ConnectionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000004 /* ConnectionManager.swift */; };
+		AA000005 /* DashboardListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000005 /* DashboardListViewModel.swift */; };
+		AA000006 /* DashboardDetailViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000006 /* DashboardDetailViewModel.swift */; };
+		AA000007 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000007 /* RootView.swift */; };
+		AA000008 /* ConnectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000008 /* ConnectView.swift */; };
+		AA000009 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000009 /* MainTabView.swift */; };
+		AA000010 /* DashboardListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000010 /* DashboardListView.swift */; };
+		AA000011 /* DashboardDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000011 /* DashboardDetailView.swift */; };
+		AA000012 /* PanelCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000012 /* PanelCardView.swift */; };
+		AA000013 /* DataSourcesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000013 /* DataSourcesView.swift */; };
+		AA000014 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000014 /* SettingsView.swift */; };
+		AA000015 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AB000015 /* Assets.xcassets */; };
+		AA000016 /* WebAuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000016 /* WebAuthManager.swift */; };
+		AA000017 /* GrafanaLoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000017 /* GrafanaLoginView.swift */; };
+		AA000018 /* StoreManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000018 /* StoreManager.swift */; };
+		AA000019 /* BannerAdView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000019 /* BannerAdView.swift */; };
+		AA000021 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = AB000021 /* PrivacyInfo.xcprivacy */; };
+		AA000022 /* AppearanceManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000022 /* AppearanceManager.swift */; };
+		B5FDFE884562486032AB9C17 /* SilencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29452C41AC2DD8B0013B740E /* SilencesView.swift */; };
+		B81D116CF7316F7B329119F2 /* GrafLensShortcuts.swift in Sources */ = {isa = PBXBuildFile; fileRef = E810FD8B4C400007BE3D19C6 /* GrafLensShortcuts.swift */; };
+		BC085DCEE22586962A88F84F /* SnapshotsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20D49312523525D5AA62C820 /* SnapshotsView.swift */; };
+		D18267F5CE9D5B42DDA8DA97 /* SpotlightManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B805FE04F25C0FDD200C1E28 /* SpotlightManager.swift */; };
+		D38AB9E847C0B416A262908F /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 75445B88ED55FEFDCDB4D412 /* Foundation.framework */; };
+		E1F225F96F4AB07751E15998 /* AlertsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E44E10D95F7DEB504689C53 /* AlertsViewModel.swift */; };
+		F7D23F92F81F3364C965FC3A /* SharedDataManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 711CF58FD737D8F0ED4FD29B /* SharedDataManager.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		C18E1ACAD0CCC178F4B8680E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B2000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 39742A4989446C6A2DB6C231;
+			remoteInfo = GrafLensWidget;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		0EA66B5FD3F3F60DC0E402A3 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				58584914F438E7D625C3E7FC /* GrafLensWidget.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		0B97FA5A53F6AA5B2764F02B /* PlaylistsView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PlaylistsView.swift; sourceTree = "<group>"; };
+		0E44E10D95F7DEB504689C53 /* AlertsViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AlertsViewModel.swift; sourceTree = "<group>"; };
+		1F10F6974089CABF30048148 /* DashboardEditView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DashboardEditView.swift; sourceTree = "<group>"; };
+		20D49312523525D5AA62C820 /* SnapshotsView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SnapshotsView.swift; sourceTree = "<group>"; };
+		27E977DD64ED8F07D12C622B /* GrafLensWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = GrafLensWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		29452C41AC2DD8B0013B740E /* SilencesView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SilencesView.swift; sourceTree = "<group>"; };
+		304CBEB6CB9FE94C464AED31 /* AlertsView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AlertsView.swift; sourceTree = "<group>"; };
+		30E359F9FE74B65C28F41800 /* CreateSilenceView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CreateSilenceView.swift; sourceTree = "<group>"; };
+		35B63B8F78C1D8C4CA309964 /* NativeBarChartPanel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NativeBarChartPanel.swift; sourceTree = "<group>"; };
+		3FE7D8AD3902F66DF6DB9F8D /* HapticManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HapticManager.swift; sourceTree = "<group>"; };
+		5CEEE4F8C04808E783E80F26 /* ServerSwitcherView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ServerSwitcherView.swift; sourceTree = "<group>"; };
+		60EAB3EB5A4BA209BA347130 /* GrafLensWidget.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = GrafLensWidget.swift; sourceTree = "<group>"; };
+		711CF58FD737D8F0ED4FD29B /* SharedDataManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SharedDataManager.swift; sourceTree = "<group>"; };
+		75445B88ED55FEFDCDB4D412 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS14.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
+		93D81C984BCDAD03572DB6F4 /* NativeTimeSeriesPanel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NativeTimeSeriesPanel.swift; sourceTree = "<group>"; };
+		95777EFCAF2CDAEF5C2D782B /* PanelCacheManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PanelCacheManager.swift; sourceTree = "<group>"; };
+		AB000001 /* GrafLensApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrafLensApp.swift; sourceTree = "<group>"; };
+		AB000002 /* GrafanaModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrafanaModels.swift; sourceTree = "<group>"; };
+		AB000003 /* GrafanaAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrafanaAPIClient.swift; sourceTree = "<group>"; };
+		AB000004 /* ConnectionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionManager.swift; sourceTree = "<group>"; };
+		AB000005 /* DashboardListViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardListViewModel.swift; sourceTree = "<group>"; };
+		AB000006 /* DashboardDetailViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardDetailViewModel.swift; sourceTree = "<group>"; };
+		AB000007 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		AB000008 /* ConnectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectView.swift; sourceTree = "<group>"; };
+		AB000009 /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
+		AB000010 /* DashboardListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardListView.swift; sourceTree = "<group>"; };
+		AB000011 /* DashboardDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardDetailView.swift; sourceTree = "<group>"; };
+		AB000012 /* PanelCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelCardView.swift; sourceTree = "<group>"; };
+		AB000013 /* DataSourcesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataSourcesView.swift; sourceTree = "<group>"; };
+		AB000014 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		AB000015 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		AB000016 /* WebAuthManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebAuthManager.swift; sourceTree = "<group>"; };
+		AB000017 /* GrafanaLoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrafanaLoginView.swift; sourceTree = "<group>"; };
+		AB000018 /* StoreManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreManager.swift; sourceTree = "<group>"; };
+		AB000019 /* BannerAdView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BannerAdView.swift; sourceTree = "<group>"; };
+		AB000020 /* GrafLensProducts.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; path = GrafLensProducts.storekit; sourceTree = "<group>"; };
+		AB000021 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		AB000022 /* AppearanceManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppearanceManager.swift; sourceTree = "<group>"; };
+		AC000001 /* GrafLens.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GrafLens.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B805FE04F25C0FDD200C1E28 /* SpotlightManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SpotlightManager.swift; sourceTree = "<group>"; };
+		C14975CC65260F7E2ADD8DF3 /* CreateAnnotationView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CreateAnnotationView.swift; sourceTree = "<group>"; };
+		CD8B16DE6879101D21AF83F4 /* FolderManagementView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FolderManagementView.swift; sourceTree = "<group>"; };
+		D954B3184A490D1837D81C3B /* NativeGaugePanel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NativeGaugePanel.swift; sourceTree = "<group>"; };
+		DBF5CA90B5D6DFFECC61B3ED /* KeychainManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = KeychainManager.swift; sourceTree = "<group>"; };
+		E810FD8B4C400007BE3D19C6 /* GrafLensShortcuts.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = GrafLensShortcuts.swift; sourceTree = "<group>"; };
+		F010CBF1F08E7E82EBC72AF3 /* FavoritesManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FavoritesManager.swift; sourceTree = "<group>"; };
+		F8C2E0336E54BCDD07087222 /* NativeStatPanel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NativeStatPanel.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		981EE6D4543D24E3D37CCD1A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D38AB9E847C0B416A262908F /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AD000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		0569A5E0E2589C6C847DEAD7 /* iOS */ = {
+			isa = PBXGroup;
+			children = (
+				75445B88ED55FEFDCDB4D412 /* Foundation.framework */,
+			);
+			name = iOS;
+			sourceTree = "<group>";
+		};
+		1B8AA46E20EF05D58EE6F5BB /* NativeCharts */ = {
+			isa = PBXGroup;
+			children = (
+				F8C2E0336E54BCDD07087222 /* NativeStatPanel.swift */,
+				D954B3184A490D1837D81C3B /* NativeGaugePanel.swift */,
+				93D81C984BCDAD03572DB6F4 /* NativeTimeSeriesPanel.swift */,
+				35B63B8F78C1D8C4CA309964 /* NativeBarChartPanel.swift */,
+			);
+			path = NativeCharts;
+			sourceTree = "<group>";
+		};
+		AE000001 = {
+			isa = PBXGroup;
+			children = (
+				AE000002 /* GrafLens */,
+				AE000007 /* Products */,
+				FF7ED21C7F4FD9E03316AA0A /* Frameworks */,
+				BC986156896ED74ACCE2E941 /* GrafLensWidget */,
+			);
+			sourceTree = "<group>";
+		};
+		AE000002 /* GrafLens */ = {
+			isa = PBXGroup;
+			children = (
+				AB000001 /* GrafLensApp.swift */,
+				AB000015 /* Assets.xcassets */,
+				AB000020 /* GrafLensProducts.storekit */,
+				AB000021 /* PrivacyInfo.xcprivacy */,
+				AE000003 /* Models */,
+				AE000004 /* Services */,
+				AE000005 /* ViewModels */,
+				AE000006 /* Views */,
+				E810FD8B4C400007BE3D19C6 /* GrafLensShortcuts.swift */,
+			);
+			path = GrafLens;
+			sourceTree = "<group>";
+		};
+		AE000003 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				AB000002 /* GrafanaModels.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		AE000004 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				AB000003 /* GrafanaAPIClient.swift */,
+				AB000004 /* ConnectionManager.swift */,
+				AB000016 /* WebAuthManager.swift */,
+				AB000018 /* StoreManager.swift */,
+				AB000022 /* AppearanceManager.swift */,
+				DBF5CA90B5D6DFFECC61B3ED /* KeychainManager.swift */,
+				3FE7D8AD3902F66DF6DB9F8D /* HapticManager.swift */,
+				F010CBF1F08E7E82EBC72AF3 /* FavoritesManager.swift */,
+				B805FE04F25C0FDD200C1E28 /* SpotlightManager.swift */,
+				95777EFCAF2CDAEF5C2D782B /* PanelCacheManager.swift */,
+				711CF58FD737D8F0ED4FD29B /* SharedDataManager.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		AE000005 /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				AB000005 /* DashboardListViewModel.swift */,
+				AB000006 /* DashboardDetailViewModel.swift */,
+				0E44E10D95F7DEB504689C53 /* AlertsViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		AE000006 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				AB000007 /* RootView.swift */,
+				AB000008 /* ConnectView.swift */,
+				AB000009 /* MainTabView.swift */,
+				AB000010 /* DashboardListView.swift */,
+				AB000011 /* DashboardDetailView.swift */,
+				AB000012 /* PanelCardView.swift */,
+				AB000013 /* DataSourcesView.swift */,
+				AB000014 /* SettingsView.swift */,
+				AB000017 /* GrafanaLoginView.swift */,
+				AB000019 /* BannerAdView.swift */,
+				1B8AA46E20EF05D58EE6F5BB /* NativeCharts */,
+				304CBEB6CB9FE94C464AED31 /* AlertsView.swift */,
+				C14975CC65260F7E2ADD8DF3 /* CreateAnnotationView.swift */,
+				30E359F9FE74B65C28F41800 /* CreateSilenceView.swift */,
+				29452C41AC2DD8B0013B740E /* SilencesView.swift */,
+				20D49312523525D5AA62C820 /* SnapshotsView.swift */,
+				CD8B16DE6879101D21AF83F4 /* FolderManagementView.swift */,
+				0B97FA5A53F6AA5B2764F02B /* PlaylistsView.swift */,
+				5CEEE4F8C04808E783E80F26 /* ServerSwitcherView.swift */,
+				1F10F6974089CABF30048148 /* DashboardEditView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		AE000007 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				AC000001 /* GrafLens.app */,
+				27E977DD64ED8F07D12C622B /* GrafLensWidget.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		BC986156896ED74ACCE2E941 /* GrafLensWidget */ = {
+			isa = PBXGroup;
+			children = (
+				60EAB3EB5A4BA209BA347130 /* GrafLensWidget.swift */,
+			);
+			path = GrafLensWidget;
+			sourceTree = "<group>";
+		};
+		FF7ED21C7F4FD9E03316AA0A /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				0569A5E0E2589C6C847DEAD7 /* iOS */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		39742A4989446C6A2DB6C231 /* GrafLensWidget */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 75C83DFF0B04511C22FD1F5A /* Build configuration list for PBXNativeTarget "GrafLensWidget" */;
+			buildPhases = (
+				1E964BE1B0321F495E6BBA7A /* Sources */,
+				981EE6D4543D24E3D37CCD1A /* Frameworks */,
+				C855486003347B4AF3484C48 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = GrafLensWidget;
+			productName = GrafLensWidget;
+			productReference = 27E977DD64ED8F07D12C622B /* GrafLensWidget.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		AF000001 /* GrafLens */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B1000001 /* Build configuration list for PBXNativeTarget "GrafLens" */;
+			buildPhases = (
+				B0000001 /* Sources */,
+				AD000001 /* Frameworks */,
+				B0000002 /* Resources */,
+				0EA66B5FD3F3F60DC0E402A3 /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				7BFB1F77EDDDB2FB6CDE43E8 /* PBXTargetDependency */,
+			);
+			name = GrafLens;
+			productName = GrafLens;
+			productReference = AC000001 /* GrafLens.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		B2000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1540;
+				LastUpgradeCheck = 2630;
+				TargetAttributes = {
+					AF000001 = {
+						CreatedOnToolsVersion = 15.4;
+					};
+				};
+			};
+			buildConfigurationList = B1000002 /* Build configuration list for PBXProject "GrafLens" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = AE000001;
+			productRefGroup = AE000007 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				AF000001 /* GrafLens */,
+				39742A4989446C6A2DB6C231 /* GrafLensWidget */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		B0000002 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA000015 /* Assets.xcassets in Resources */,
+				AA000021 /* PrivacyInfo.xcprivacy in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C855486003347B4AF3484C48 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		1E964BE1B0321F495E6BBA7A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9CAA85A9FDDB39A7FCF91248 /* GrafLensWidget.swift in Sources */,
+				7759C5D6B874AEB85C43A1B4 /* GrafanaModels.swift in Sources */,
+				25970FBA986FD51B01713E48 /* GrafanaAPIClient.swift in Sources */,
+				F7D23F92F81F3364C965FC3A /* SharedDataManager.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B0000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA000001 /* GrafLensApp.swift in Sources */,
+				AA000002 /* GrafanaModels.swift in Sources */,
+				AA000003 /* GrafanaAPIClient.swift in Sources */,
+				AA000004 /* ConnectionManager.swift in Sources */,
+				AA000005 /* DashboardListViewModel.swift in Sources */,
+				AA000006 /* DashboardDetailViewModel.swift in Sources */,
+				AA000007 /* RootView.swift in Sources */,
+				AA000008 /* ConnectView.swift in Sources */,
+				AA000009 /* MainTabView.swift in Sources */,
+				AA000010 /* DashboardListView.swift in Sources */,
+				AA000011 /* DashboardDetailView.swift in Sources */,
+				AA000012 /* PanelCardView.swift in Sources */,
+				AA000013 /* DataSourcesView.swift in Sources */,
+				AA000014 /* SettingsView.swift in Sources */,
+				AA000016 /* WebAuthManager.swift in Sources */,
+				AA000017 /* GrafanaLoginView.swift in Sources */,
+				AA000018 /* StoreManager.swift in Sources */,
+				AA000019 /* BannerAdView.swift in Sources */,
+				AA000022 /* AppearanceManager.swift in Sources */,
+				793C053117D645CDCC572BA2 /* KeychainManager.swift in Sources */,
+				44AA315E87A7582D76EB182F /* HapticManager.swift in Sources */,
+				632F2413244C8139DD55DA9D /* FavoritesManager.swift in Sources */,
+				D18267F5CE9D5B42DDA8DA97 /* SpotlightManager.swift in Sources */,
+				3927567635429EE53F6B4E16 /* PanelCacheManager.swift in Sources */,
+				8992D9DCD41D4F19CA27851E /* AlertsView.swift in Sources */,
+				1BE09CE4E80C79E9BEB25045 /* CreateAnnotationView.swift in Sources */,
+				97AB2FC5849E9E5914B32110 /* CreateSilenceView.swift in Sources */,
+				B5FDFE884562486032AB9C17 /* SilencesView.swift in Sources */,
+				BC085DCEE22586962A88F84F /* SnapshotsView.swift in Sources */,
+				13E4BFD4C419F04676ECD5D4 /* FolderManagementView.swift in Sources */,
+				9EF061F5A45E9EA8C0A889AD /* PlaylistsView.swift in Sources */,
+				1C7C37945BC2D093B357D7A7 /* ServerSwitcherView.swift in Sources */,
+				2405E3F9AA5236D6DC83E087 /* DashboardEditView.swift in Sources */,
+				123615E639D9B7B045095EA4 /* NativeStatPanel.swift in Sources */,
+				22AF49B31297956A351CCB32 /* NativeGaugePanel.swift in Sources */,
+				8B370E8553F1353DB5997B5B /* NativeTimeSeriesPanel.swift in Sources */,
+				742846ADADCC9A021E0B3F83 /* NativeBarChartPanel.swift in Sources */,
+				E1F225F96F4AB07751E15998 /* AlertsViewModel.swift in Sources */,
+				B81D116CF7316F7B329119F2 /* GrafLensShortcuts.swift in Sources */,
+				91971F74D287BB21C686E5E9 /* SharedDataManager.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		7BFB1F77EDDDB2FB6CDE43E8 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = GrafLensWidget;
+			target = 39742A4989446C6A2DB6C231 /* GrafLensWidget */;
+			targetProxy = C18E1ACAD0CCC178F4B8680E /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		B3000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		B3000002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		B3000003 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1011;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = GrafLens/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = GrafLens;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = tech.whitematter.graflens;
+				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = tech.whitematter.graflens;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = YES;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,6";
+			};
+			name = Debug;
+		};
+		B3000004 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1011;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = GrafLens/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = GrafLens;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = tech.whitematter.graflens;
+				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = tech.whitematter.graflens;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = YES;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,6";
+			};
+			name = Release;
+		};
+		BB0DB6B49C9D4942471CD34E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1011;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = GrafLensWidget/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = tech.whitematter.graflens.widget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		EDE72DBBF3218B163573FFA7 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1011;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = GrafLensWidget/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = tech.whitematter.graflens.widget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		75C83DFF0B04511C22FD1F5A /* Build configuration list for PBXNativeTarget "GrafLensWidget" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BB0DB6B49C9D4942471CD34E /* Release */,
+				EDE72DBBF3218B163573FFA7 /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B1000001 /* Build configuration list for PBXNativeTarget "GrafLens" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B3000003 /* Debug */,
+				B3000004 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B1000002 /* Build configuration list for PBXProject "GrafLens" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B3000001 /* Debug */,
+				B3000002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = B2000001 /* Project object */;
+}

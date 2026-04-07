@@ -1,0 +1,113 @@
+{
+  "identifier" : "B57F6035-1A4D-4B5A-9B35-7C2F0A1E3D8F",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+    {
+      "displayPrice" : "1.99",
+      "familyShareable" : false,
+      "internalID" : "D1A2B3C4-0001-0001-0001-000000000001",
+      "localizations" : [
+        {
+          "description" : "Buy the developer a coffee.",
+          "displayName" : "Coffee Tip",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "tech.whitematter.graflens.tip.small",
+      "referenceName" : "Coffee Tip",
+      "type" : "Consumable"
+    },
+    {
+      "displayPrice" : "4.99",
+      "familyShareable" : false,
+      "internalID" : "D1A2B3C4-0001-0001-0001-000000000002",
+      "localizations" : [
+        {
+          "description" : "Buy the developer lunch.",
+          "displayName" : "Lunch Tip",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "tech.whitematter.graflens.tip.medium",
+      "referenceName" : "Lunch Tip",
+      "type" : "Consumable"
+    },
+    {
+      "displayPrice" : "9.99",
+      "familyShareable" : false,
+      "internalID" : "D1A2B3C4-0001-0001-0001-000000000003",
+      "localizations" : [
+        {
+          "description" : "Buy the developer dinner.",
+          "displayName" : "Dinner Tip",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "tech.whitematter.graflens.tip.large",
+      "referenceName" : "Dinner Tip",
+      "type" : "Consumable"
+    }
+  ],
+  "settings" : {
+    "_applicationInternalID" : "1234567890",
+    "_developerTeamID" : "",
+    "_failTransactionsEnabled" : false,
+    "_lastSynchronizedDate" : "2026-04-05T00:00:00Z",
+    "_storeKitErrors" : [
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Load Products"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Purchase"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Verification"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "App Store Sync"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Subscription Status"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "App Transaction"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Manage Subscriptions Sheet"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Refund Request Sheet"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Offer Code Redeem Sheet"
+      }
+    ]
+  },
+  "subscriptionGroups" : [
+
+  ],
+  "version" : {
+    "major" : 4,
+    "minor" : 0
+  }
+}
