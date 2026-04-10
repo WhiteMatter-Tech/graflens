@@ -120,6 +120,8 @@
 		AB000020 /* GrafLensProducts.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; path = GrafLensProducts.storekit; sourceTree = "<group>"; };
 		AB000021 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		AB000022 /* AppearanceManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppearanceManager.swift; sourceTree = "<group>"; };
+		AB000023 /* GrafLens.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = GrafLens.entitlements; sourceTree = "<group>"; };
+		AB000024 /* GrafLensWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = GrafLensWidget.entitlements; sourceTree = "<group>"; };
 		AC000001 /* GrafLens.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GrafLens.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B805FE04F25C0FDD200C1E28 /* SpotlightManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SpotlightManager.swift; sourceTree = "<group>"; };
 		C14975CC65260F7E2ADD8DF3 /* CreateAnnotationView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CreateAnnotationView.swift; sourceTree = "<group>"; };
@@ -186,6 +188,7 @@
 				AB000015 /* Assets.xcassets */,
 				AB000020 /* GrafLensProducts.storekit */,
 				AB000021 /* PrivacyInfo.xcprivacy */,
+				AB000023 /* GrafLens.entitlements */,
 				AE000003 /* Models */,
 				AE000004 /* Services */,
 				AE000005 /* ViewModels */,
@@ -271,6 +274,7 @@
 			isa = PBXGroup;
 			children = (
 				60EAB3EB5A4BA209BA347130 /* GrafLensWidget.swift */,
+				AB000024 /* GrafLensWidget.entitlements */,
 			);
 			path = GrafLensWidget;
 			sourceTree = "<group>";
@@ -570,11 +574,14 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = GrafLens/GrafLens.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1011;
+				CURRENT_PROJECT_VERSION = 1600;
+				DEVELOPMENT_TEAM = AD2VN8P4JY;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = GrafLens/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = GrafLens;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -584,7 +591,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = tech.whitematter.graflens;
 				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = tech.whitematter.graflens;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -602,11 +609,14 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = GrafLens/GrafLens.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1011;
+				CURRENT_PROJECT_VERSION = 1600;
+				DEVELOPMENT_TEAM = AD2VN8P4JY;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = GrafLens/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = GrafLens;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -616,7 +626,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = tech.whitematter.graflens;
 				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = tech.whitematter.graflens;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -633,8 +643,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = GrafLensWidget/GrafLensWidget.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1011;
+				CURRENT_PROJECT_VERSION = 1600;
+				DEVELOPMENT_TEAM = AD2VN8P4JY;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = GrafLensWidget/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
@@ -643,7 +655,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = tech.whitematter.graflens.widget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -658,8 +670,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = GrafLensWidget/GrafLensWidget.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1011;
+				CURRENT_PROJECT_VERSION = 1600;
+				DEVELOPMENT_TEAM = AD2VN8P4JY;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = GrafLensWidget/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
@@ -668,7 +682,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = tech.whitematter.graflens.widget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;

@@ -30,7 +30,7 @@ class DashboardDetailViewModel: ObservableObject {
 
             // Cache panels for widget configuration
             let panelInfos = panels.filter { $0.isVisualization }.map {
-                PanelInfo(id: $0.id, title: $0.displayTitle, type: $0.type)
+                Self.panelInfoFrom($0)
             }
             SharedDataManager.cachePanelList(dashboardUID: dashboardUID, panels: panelInfos)
         } catch {
@@ -38,5 +38,22 @@ class DashboardDetailViewModel: ObservableObject {
         }
 
         isLoading = false
+    }
+
+    nonisolated static func panelInfoFrom(_ panel: Panel) -> PanelInfo {
+        let dsUID = panel.targets?.first?.datasource?.uid ?? panel.datasource?.uid
+        let dsType = panel.targets?.first?.datasource?.type ?? panel.datasource?.type
+        let targets = panel.targets?.compactMap { t -> PanelInfoTarget? in
+            guard t.expr != nil || t.rawSql != nil else { return nil }
+            return PanelInfoTarget(refId: t.refId ?? "A", expr: t.expr, rawSql: t.rawSql)
+        }
+        return PanelInfo(
+            id: panel.id,
+            title: panel.displayTitle,
+            type: panel.type,
+            datasourceUID: dsUID,
+            datasourceType: dsType,
+            targets: targets
+        )
     }
 }

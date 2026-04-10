@@ -123,6 +123,7 @@ struct Panel: Codable, Identifiable {
     let gridPos: GridPos?
     let panels: [Panel]?
     let targets: [Target]?
+    let datasource: FlexibleDatasource?
 
     var displayTitle: String {
         let t = title ?? ""
@@ -143,10 +144,62 @@ struct GridPos: Codable {
     let y: Int?
 }
 
+/// Grafana datasource references can be a string (name) or an object (uid+type).
+enum FlexibleDatasource: Codable {
+    case name(String)
+    case reference(uid: String?, type: String?)
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if let str = try? container.decode(String.self) {
+            self = .name(str)
+        } else {
+            let obj = try container.decode(DatasourceRef.self)
+            self = .reference(uid: obj.uid, type: obj.type)
+        }
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        switch self {
+        case .name(let n): try container.encode(n)
+        case .reference(let uid, let type):
+            try container.encode(DatasourceRef(uid: uid, type: type))
+        }
+    }
+
+    var uid: String? {
+        switch self {
+        case .name: return nil
+        case .reference(let uid, _): return uid
+        }
+    }
+
+    var type: String? {
+        switch self {
+        case .name: return nil
+        case .reference(_, let type): return type
+        }
+    }
+
+    var nameValue: String? {
+        switch self {
+        case .name(let n): return n
+        case .reference: return nil
+        }
+    }
+
+    private struct DatasourceRef: Codable {
+        let uid: String?
+        let type: String?
+    }
+}
+
 struct Target: Codable {
     let refId: String?
     let expr: String?
     let rawSql: String?
+    let datasource: FlexibleDatasource?
 }
 
 // MARK: - Folder

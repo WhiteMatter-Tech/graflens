@@ -8,6 +8,7 @@ struct ConnectView: View {
     @State private var isConnecting = false
     @State private var error: String?
     @State private var showSavedConnections = false
+    @State private var useAuthentication = false
 
     var body: some View {
         NavigationStack {
@@ -50,23 +51,33 @@ struct ConnectView: View {
                                 .autocorrectionDisabled()
                         }
 
-                        VStack(alignment: .leading, spacing: 6) {
-                            HStack {
+                        Toggle(isOn: $useAuthentication.animation()) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Sign in with API key")
+                                    .font(.subheadline)
+                                Text("Not required for public servers")
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                        .tint(.orange)
+                        .onChange(of: useAuthentication) { _, newValue in
+                            if !newValue {
+                                apiKey = ""
+                            }
+                        }
+
+                        if useAuthentication {
+                            VStack(alignment: .leading, spacing: 6) {
                                 Text("API Key / Service Account Token")
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
-                                Spacer()
-                                Text("optional")
-                                    .font(.caption2)
-                                    .foregroundStyle(.tertiary)
+                                SecureField("glsa_xxxxxxxxxxxx", text: $apiKey)
+                                    .textFieldStyle(.roundedBorder)
+                                    .textInputAutocapitalization(.never)
+                                    .autocorrectionDisabled()
                             }
-                            SecureField("glsa_xxxxxxxxxxxx", text: $apiKey)
-                                .textFieldStyle(.roundedBorder)
-                                .textInputAutocapitalization(.never)
-                                .autocorrectionDisabled()
-                            Text("Leave blank for public/anonymous Grafana instances (e.g. play.grafana.org)")
-                                .font(.caption2)
-                                .foregroundStyle(.tertiary)
+                            .transition(.opacity.combined(with: .move(edge: .top)))
                         }
 
                         if let error = error {
@@ -140,21 +151,36 @@ struct ConnectView: View {
                     }
 
                     // Help text
-                    VStack(alignment: .leading, spacing: 8) {
-                        Label("How to get an API key", systemImage: "questionmark.circle")
-                            .font(.subheadline.bold())
+                    if useAuthentication {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Label("How to get an API key", systemImage: "questionmark.circle")
+                                .font(.subheadline.bold())
 
-                        Text("1. Go to your Grafana instance")
-                        Text("2. Navigate to Administration > Service Accounts")
-                        Text("3. Create a new Service Account with Viewer role")
-                        Text("4. Generate a token and paste it above")
+                            Text("1. Go to your Grafana instance")
+                            Text("2. Navigate to Administration > Service Accounts")
+                            Text("3. Create a new Service Account with Viewer role")
+                            Text("4. Generate a token and paste it above")
+                        }
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(16)
+                        .background(.regularMaterial)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .transition(.opacity)
+                    } else {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Label("Try it free", systemImage: "sparkles")
+                                .font(.subheadline.bold())
+                            Text("Tap Connect to browse the public Grafana demo server. No account or sign-in needed.")
+                        }
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(16)
+                        .background(.regularMaterial)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
                     }
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(16)
-                    .background(.regularMaterial)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
                 .padding(.horizontal, 20)
                 .padding(.bottom, 40)

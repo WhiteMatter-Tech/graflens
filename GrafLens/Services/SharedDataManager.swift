@@ -75,6 +75,30 @@ enum SharedDataManager {
               let panels = try? JSONDecoder().decode([PanelInfo].self, from: data) else { return [] }
         return panels
     }
+
+    // MARK: - Panel Snapshots (file-based, shared via App Group container)
+
+    private static var snapshotDirectory: URL? {
+        FileManager.default
+            .containerURL(forSecurityApplicationGroupIdentifier: appGroupID)?
+            .appendingPathComponent("PanelSnapshots", isDirectory: true)
+    }
+
+    private static func snapshotURL(dashboardUID: String, panelID: Int) -> URL? {
+        snapshotDirectory?.appendingPathComponent("\(dashboardUID)_\(panelID).jpg")
+    }
+
+    static func savePanelSnapshot(dashboardUID: String, panelID: Int, imageData: Data) {
+        guard let dir = snapshotDirectory else { return }
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        guard let url = snapshotURL(dashboardUID: dashboardUID, panelID: panelID) else { return }
+        try? imageData.write(to: url)
+    }
+
+    static func loadPanelSnapshot(dashboardUID: String, panelID: Int) -> Data? {
+        guard let url = snapshotURL(dashboardUID: dashboardUID, panelID: panelID) else { return nil }
+        return try? Data(contentsOf: url)
+    }
 }
 
 // MARK: - Shared types
@@ -90,4 +114,13 @@ struct PanelInfo: Codable, Identifiable, Hashable {
     let id: Int
     let title: String
     let type: String?
+    let datasourceUID: String?
+    let datasourceType: String?
+    let targets: [PanelInfoTarget]?
+}
+
+struct PanelInfoTarget: Codable, Hashable {
+    let refId: String
+    let expr: String?
+    let rawSql: String?
 }

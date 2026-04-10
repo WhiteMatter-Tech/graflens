@@ -58,10 +58,44 @@ class DashboardListViewModel: ObservableObject {
 
             // Cache for widget configuration
             SharedDataManager.cacheDashboardList(results)
+
+            // Preload panels for all dashboards so the widget panel picker
+            // can show every panel without the user opening each dashboard.
+            Task.detached {
+                await Self.preloadPanelsForWidget(dashboards: results, client: client)
+            }
         } catch {
             self.error = error.localizedDescription
         }
 
         isLoading = false
+    }
+
+    private static func preloadPanelsForWidget(dashboards: [DashboardSearchResult], client: GrafanaAPIClient) async {
+        await withTaskGroup(of: Void.self) { group in
+            // Cap concurrency: only 5 in-flight at once to avoid hammering the server.
+            var inFlight = 0
+            for dash in dashboards {
+                // Skip dashboards whose cached panels already include query info.
+                let cached = SharedDataManager.loadCachedPanels(dashboardUID: dash.uid)
+                if !cached.isEmpty && cached.contains(where: { $0.targets != nil && !($0.targets!.isEmpty) }) {
+                    continue
+                }
+                if inFlight >= 5 {
+                    await group.next()
+                    inFlight -= 1
+                }
+                inFlight += 1
+                group.addTask {
+                    guard let response = try? await client.getDashboard(uid: dash.uid) else { return }
+                    let panelInfos = response.dashboard.allPanels
+                        .filter { $0.isVisualization }
+                        .map { DashboardDetailViewModel.panelInfoFrom($0) }
+                    if !panelInfos.isEmpty {
+                        SharedDataManager.cachePanelList(dashboardUID: dash.uid, panels: panelInfos)
+                    }
+                }
+            }
+        }
     }
 }

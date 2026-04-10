@@ -84,6 +84,9 @@ class ConnectionManager: ObservableObject {
            let connection = connections.first(where: { $0.id == uuid }) {
             activeConnection = connection
             isConnected = true
+            // Keep the shared App Group container in sync so the widget
+            // can read the active connection on timeline refresh.
+            SharedDataManager.saveActiveConnection(connection)
         }
     }
 }

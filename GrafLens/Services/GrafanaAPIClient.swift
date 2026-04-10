@@ -192,6 +192,200 @@ actor GrafanaAPIClient {
         return try await deleteRequest(path: "/api/playlists/\(uid)")
     }
 
+    // MARK: - Panel Data Query
+
+    /// Queries a panel's datasource and returns the latest value(s) for stat/gauge widgets.
+    func queryPanelValue(panel: Panel, from: String = "now-6h", to: String = "now") async throws -> String? {
+        guard let targets = panel.targets, !targets.isEmpty else { return nil }
+
+        // Resolve datasource UID: target-level → panel-level → fetch default.
+        let dsUID: String
+        let dsType: String
+        if let uid = Self.resolveUID(targets.first?.datasource, fallback: panel.datasource) {
+            dsUID = uid
+            dsType = Self.resolveType(targets.first?.datasource, fallback: panel.datasource) ?? ""
+        } else {
+            // Look up datasources from the API and use the default one.
+            guard let dataSources = try? await getDataSources(),
+                  let defaultDS = dataSources.first(where: { $0.isDefault == true }) ?? dataSources.first,
+                  let uid = defaultDS.uid else { return nil }
+            dsUID = uid
+            dsType = defaultDS.type
+        }
+
+        // Build a query for each target.
+        let now = Int64(Date().timeIntervalSince1970 * 1000)
+        var queries: [[String: Any]] = []
+        for (i, target) in targets.enumerated() {
+            var q: [String: Any] = [
+                "refId": target.refId ?? String(UnicodeScalar(65 + min(i, 25))!),
+                "datasource": ["uid": dsUID, "type": dsType]
+            ]
+            if let expr = target.expr {
+                q["expr"] = expr
+                q["instant"] = true
+                q["intervalMs"] = 60000
+                q["maxDataPoints"] = 1
+            }
+            if let rawSql = target.rawSql {
+                q["rawSql"] = rawSql
+                q["format"] = "table"
+            }
+            queries.append(q)
+        }
+
+        let body: [String: Any] = [
+            "queries": queries,
+            "from": "\(now - 21600000)",   // 6h ago in epoch ms
+            "to": "\(now)"
+        ]
+
+        guard let baseURL = connection.baseURL else { throw GrafanaAPIError.invalidURL }
+        let url = baseURL.appendingPathComponent("/api/ds/query")
+        var urlRequest = URLRequest(url: url)
+        urlRequest.httpMethod = "POST"
+        if !connection.apiKey.isEmpty {
+            urlRequest.setValue("Bearer \(connection.apiKey)", forHTTPHeaderField: "Authorization")
+        }
+        urlRequest.setValue("application/json", forHTTPHeaderField: "Accept")
+        urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        urlRequest.httpBody = try JSONSerialization.data(withJSONObject: body)
+
+        let data: Data
+        let response: URLResponse
+        do {
+            (data, response) = try await session.data(for: urlRequest)
+        } catch {
+            throw GrafanaAPIError.networkError(error)
+        }
+
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200..<300).contains(httpResponse.statusCode) else {
+            return nil
+        }
+
+        // Response: { "results": { "A": { "frames": [{ "data": { "values": [[ts...],[val...]] } }] }, "B": ... } }
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let results = json["results"] as? [String: Any] else { return nil }
+
+        // Collect the last value from each refId, in order.
+        var values: [(String, String)] = []
+        let sortedKeys = results.keys.sorted()
+        for key in sortedKeys {
+            guard let refDict = results[key] as? [String: Any],
+                  let frames = refDict["frames"] as? [[String: Any]] else { continue }
+            for frame in frames {
+                // Try to get the display name from the schema.
+                let label = Self.extractFrameLabel(frame)
+                guard let frameData = frame["data"] as? [String: Any],
+                      let columns = frameData["values"] as? [[Any]] else { continue }
+                // Last column = metric values; last element = most recent value.
+                if let valueColumn = columns.last, let lastValue = valueColumn.last {
+                    values.append((label ?? key, Self.formatPanelValue(lastValue)))
+                }
+            }
+        }
+
+        if values.isEmpty { return nil }
+        if values.count == 1 { return values[0].1 }
+        // Multi-value: return a compact summary.
+        return values.map { "\($0.1)" }.joined(separator: " · ")
+    }
+
+    private static func resolveUID(_ target: FlexibleDatasource?, fallback: FlexibleDatasource?) -> String? {
+        target?.uid ?? fallback?.uid
+    }
+
+    private static func resolveType(_ target: FlexibleDatasource?, fallback: FlexibleDatasource?) -> String? {
+        target?.type ?? fallback?.type
+    }
+
+    private static func extractFrameLabel(_ frame: [String: Any]) -> String? {
+        guard let schema = frame["schema"] as? [String: Any],
+              let fields = schema["fields"] as? [[String: Any]] else { return nil }
+        // The last field with a displayName or name that isn't "Time"/"time".
+        for field in fields.reversed() {
+            if let display = field["config"] as? [String: Any],
+               let displayName = display["displayName"] as? String, !displayName.isEmpty {
+                return displayName
+            }
+            if let name = field["name"] as? String,
+               name.lowercased() != "time" && name.lowercased() != "value" {
+                return name
+            }
+        }
+        return nil
+    }
+
+    private static func formatPanelValue(_ value: Any) -> String {
+        if let n = value as? Double {
+            if n == n.rounded() && n < 1_000_000 {
+                return String(Int(n))
+            }
+            if n >= 1_000_000_000 {
+                return String(format: "%.1fB", n / 1_000_000_000)
+            }
+            if n >= 1_000_000 {
+                return String(format: "%.1fM", n / 1_000_000)
+            }
+            if n >= 10_000 {
+                return String(format: "%.1fK", n / 1_000)
+            }
+            return String(format: "%.1f", n)
+        }
+        if let n = value as? Int {
+            return String(n)
+        }
+        return "\(value)"
+    }
+
+    // MARK: - Widget Query (pre-built)
+
+    /// Executes pre-built queries against /api/ds/query and returns a formatted value string.
+    func executeWidgetQuery(queries: [[String: Any]], from: Int64, to: Int64) async -> String? {
+        let body: [String: Any] = [
+            "queries": queries,
+            "from": "\(from)",
+            "to": "\(to)"
+        ]
+
+        guard let baseURL = connection.baseURL else { return nil }
+        let url = baseURL.appendingPathComponent("/api/ds/query")
+        var urlRequest = URLRequest(url: url)
+        urlRequest.httpMethod = "POST"
+        if !connection.apiKey.isEmpty {
+            urlRequest.setValue("Bearer \(connection.apiKey)", forHTTPHeaderField: "Authorization")
+        }
+        urlRequest.setValue("application/json", forHTTPHeaderField: "Accept")
+        urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        urlRequest.httpBody = try? JSONSerialization.data(withJSONObject: body)
+
+        guard let (data, response) = try? await session.data(for: urlRequest),
+              let httpResponse = response as? HTTPURLResponse,
+              (200..<300).contains(httpResponse.statusCode),
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let results = json["results"] as? [String: Any] else {
+            return nil
+        }
+
+        var values: [String] = []
+        for key in results.keys.sorted() {
+            guard let refDict = results[key] as? [String: Any],
+                  let frames = refDict["frames"] as? [[String: Any]] else { continue }
+            for frame in frames {
+                guard let frameData = frame["data"] as? [String: Any],
+                      let columns = frameData["values"] as? [[Any]] else { continue }
+                if let valueColumn = columns.last, let lastValue = valueColumn.last {
+                    values.append(Self.formatPanelValue(lastValue))
+                }
+            }
+        }
+
+        if values.isEmpty { return nil }
+        if values.count == 1 { return values[0] }
+        return values.joined(separator: " · ")
+    }
+
     // MARK: - Panel Embed URL
 
     func panelEmbedURL(dashboardUID: String, panelID: Int, from: String = "now-6h", to: String = "now", theme: String = "dark") -> URL? {

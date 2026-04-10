@@ -58,7 +58,17 @@ struct PanelCardView: View {
                     from: timeRange.rawValue,
                     to: "now",
                     theme: currentTheme,
-                    onSnapshot: { image in snapshotImage = image }
+                    onSnapshot: { image in
+                        snapshotImage = image
+                        // Cache for the widget to display.
+                        if let data = image.jpegData(compressionQuality: 0.85) {
+                            SharedDataManager.savePanelSnapshot(
+                                dashboardUID: dashboardUID,
+                                panelID: panel.id,
+                                imageData: data
+                            )
+                        }
+                    }
                 )
                 .frame(height: panelHeight)
             } else {
