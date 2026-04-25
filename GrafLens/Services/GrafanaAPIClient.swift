@@ -14,7 +14,7 @@ enum GrafanaAPIError: LocalizedError {
         switch self {
         case .invalidURL: return "Invalid server URL"
         case .invalidResponse: return "Invalid response from server"
-        case .unauthorized: return "Unauthorized - check your API key"
+        case .unauthorized: return "Unauthorized - check your token. Grafana v13+ requires a service account token (glsa_...). Old API keys are no longer accepted."
         case .forbidden: return "Access forbidden - insufficient permissions"
         case .notFound: return "Resource not found"
         case .serverError(let code): return "Server error (\(code))"

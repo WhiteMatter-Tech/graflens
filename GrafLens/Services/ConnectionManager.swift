@@ -6,6 +6,7 @@ class ConnectionManager: ObservableObject {
     @Published var connections: [ServerConnection] = []
     @Published var activeConnection: ServerConnection?
     @Published var isConnected = false
+    @Published var serverMajorVersion: Int? = nil
 
     private let connectionsKey = "savedConnections"
     private let activeConnectionKey = "activeConnectionID"
@@ -45,7 +46,10 @@ class ConnectionManager: ObservableObject {
 
     func connect(to connection: ServerConnection) async throws {
         let client = GrafanaAPIClient(connection: connection)
-        _ = try await client.checkHealth()
+        let health = try await client.checkHealth()
+        serverMajorVersion = health.version.flatMap { v in
+            Int(v.split(separator: ".").first ?? "")
+        }
         activeConnection = connection
         isConnected = true
         UserDefaults.standard.set(connection.id.uuidString, forKey: activeConnectionKey)
@@ -61,6 +65,7 @@ class ConnectionManager: ObservableObject {
     func disconnect() {
         activeConnection = nil
         isConnected = false
+        serverMajorVersion = nil
         UserDefaults.standard.removeObject(forKey: activeConnectionKey)
     }
 
