@@ -388,17 +388,24 @@ actor GrafanaAPIClient {
 
     // MARK: - Panel Embed URL
 
-    func panelEmbedURL(dashboardUID: String, panelID: Int, from: String = "now-6h", to: String = "now", theme: String = "dark") -> URL? {
+    func panelEmbedURL(dashboardUID: String, panelID: Int, from: String = "now-6h", to: String = "now", theme: String = "dark", variables: [String: [String]] = [:]) -> URL? {
         guard let base = connection.baseURL else { return nil }
         var components = URLComponents(url: base, resolvingAgainstBaseURL: false)
         components?.path = "/d-solo/\(dashboardUID)"
-        components?.queryItems = [
+        var items = [
             URLQueryItem(name: "orgId", value: "1"),
             URLQueryItem(name: "panelId", value: "\(panelID)"),
             URLQueryItem(name: "from", value: from),
             URLQueryItem(name: "to", value: to),
             URLQueryItem(name: "theme", value: theme),
         ]
+        // Template variables: `var-<name>=<value>`, repeated for multi-value.
+        for name in variables.keys.sorted() {
+            for value in variables[name] ?? [] {
+                items.append(URLQueryItem(name: "var-\(name)", value: value))
+            }
+        }
+        components?.queryItems = items
         return components?.url
     }
 
