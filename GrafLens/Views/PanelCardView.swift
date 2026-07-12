@@ -5,6 +5,7 @@ struct PanelCardView: View {
     let panel: Panel
     let dashboardUID: String
     let timeRange: TimeRangeOption
+    var variables: [String: [String]] = [:]
     @EnvironmentObject var connectionManager: ConnectionManager
     @EnvironmentObject var webAuthManager: WebAuthManager
     @EnvironmentObject var appearanceManager: AppearanceManager
@@ -58,6 +59,7 @@ struct PanelCardView: View {
                     from: timeRange.rawValue,
                     to: "now",
                     theme: currentTheme,
+                    variables: variables,
                     onSnapshot: { image in
                         snapshotImage = image
                         // Cache for the widget to display.
@@ -139,6 +141,7 @@ struct PanelFullScreenView: View {
     let dashboardUID: String
     let timeRange: TimeRangeOption
     let panels: [Panel]
+    let variables: [String: [String]]
     @EnvironmentObject var connectionManager: ConnectionManager
     @EnvironmentObject var webAuthManager: WebAuthManager
     @EnvironmentObject var appearanceManager: AppearanceManager
@@ -147,11 +150,12 @@ struct PanelFullScreenView: View {
     @State private var currentIndex: Int
     @State private var showAnnotation = false
 
-    init(panel: Panel, dashboardUID: String, timeRange: TimeRangeOption, panels: [Panel] = []) {
+    init(panel: Panel, dashboardUID: String, timeRange: TimeRangeOption, panels: [Panel] = [], variables: [String: [String]] = [:]) {
         self.panel = panel
         self.dashboardUID = dashboardUID
         self.timeRange = timeRange
         self.panels = panels
+        self.variables = variables
         let idx = panels.firstIndex(where: { $0.id == panel.id }) ?? 0
         _currentIndex = State(initialValue: idx)
     }
@@ -225,6 +229,7 @@ struct PanelFullScreenView: View {
             from: timeRange.rawValue,
             to: "now",
             theme: theme,
+            variables: variables,
             onSnapshot: nil
         )
     }
@@ -240,6 +245,7 @@ struct GrafanaPanelWebView: UIViewRepresentable {
     let from: String
     let to: String
     let theme: String
+    var variables: [String: [String]] = [:]
     let onSnapshot: ((UIImage) -> Void)?
 
     func makeUIView(context: Context) -> WKWebView {
@@ -250,35 +256,39 @@ struct GrafanaPanelWebView: UIViewRepresentable {
         webView.scrollView.backgroundColor = .clear
         webView.scrollView.isScrollEnabled = false
         webView.navigationDelegate = context.coordinator
-        loadPanel(in: webView)
+        loadPanel(in: webView, coordinator: context.coordinator)
         return webView
     }
 
-    func updateUIView(_ webView: WKWebView, context: Context) {}
+    func updateUIView(_ webView: WKWebView, context: Context) {
+        // Reload when inputs (time range, theme, variable selection) change.
+        loadPanel(in: webView, coordinator: context.coordinator)
+    }
 
     func makeCoordinator() -> Coordinator {
         Coordinator(onSnapshot: onSnapshot)
     }
 
-    private func loadPanel(in webView: WKWebView) {
+    private func loadPanel(in webView: WKWebView, coordinator: Coordinator) {
         Task { @MainActor in
             guard let url = await client.panelEmbedURL(
                 dashboardUID: dashboardUID,
                 panelID: panelID,
                 from: from,
                 to: to,
-                theme: theme
+                theme: theme,
+                variables: variables
             ) else { return }
 
-            let request = URLRequest(url: url)
-            await MainActor.run {
-                webView.load(request)
-            }
+            if coordinator.lastLoadedURL == url { return }
+            coordinator.lastLoadedURL = url
+            webView.load(URLRequest(url: url))
         }
     }
 
     class Coordinator: NSObject, WKNavigationDelegate {
         let onSnapshot: ((UIImage) -> Void)?
+        var lastLoadedURL: URL?
 
         init(onSnapshot: ((UIImage) -> Void)?) {
             self.onSnapshot = onSnapshot

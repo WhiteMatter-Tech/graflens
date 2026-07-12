@@ -100,7 +100,8 @@ struct DashboardDetailView: View {
                 panel: panel,
                 dashboardUID: viewModel.dashboardUID,
                 timeRange: selectedTimeRange,
-                panels: viewModel.panels.filter { $0.isVisualization }
+                panels: viewModel.panels.filter { $0.isVisualization },
+                variables: viewModel.variableParams
             )
         }
         .sheet(isPresented: $showLogin) {
@@ -123,37 +124,45 @@ struct DashboardDetailView: View {
     }
 
     private var panelGrid: some View {
-        ScrollView {
-            // Show sign-in banner if not web-authenticated
-            if !webAuthManager.isAuthenticated {
-                signInBanner
+        VStack(spacing: 0) {
+            if !viewModel.variables.isEmpty {
+                VariableBar(viewModel: viewModel)
+                Divider()
             }
 
-            if let description = viewModel.dashboard?.description, !description.isEmpty {
-                Text(description)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal)
-                    .padding(.top, 8)
-            }
+            ScrollView {
+                // Show sign-in banner if not web-authenticated
+                if !webAuthManager.isAuthenticated {
+                    signInBanner
+                }
 
-            LazyVStack(spacing: 12) {
-                ForEach(viewModel.panels.filter { $0.isVisualization }) { panel in
-                    PanelCardView(
-                        panel: panel,
-                        dashboardUID: viewModel.dashboardUID,
-                        timeRange: selectedTimeRange
-                    )
-                    .onTapGesture {
-                        HapticManager.light()
-                        selectedPanel = panel
+                if let description = viewModel.dashboard?.description, !description.isEmpty {
+                    Text(description)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal)
+                        .padding(.top, 8)
+                }
+
+                LazyVStack(spacing: 12) {
+                    ForEach(viewModel.panels.filter { $0.isVisualization }) { panel in
+                        PanelCardView(
+                            panel: panel,
+                            dashboardUID: viewModel.dashboardUID,
+                            timeRange: selectedTimeRange,
+                            variables: viewModel.variableParams
+                        )
+                        .onTapGesture {
+                            HapticManager.light()
+                            selectedPanel = panel
+                        }
                     }
                 }
+                .padding()
             }
-            .padding()
+            .background(Color(.systemGroupedBackground))
         }
-        .background(Color(.systemGroupedBackground))
     }
 
     private var signInBanner: some View {

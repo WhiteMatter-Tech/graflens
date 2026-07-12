@@ -23,6 +23,7 @@
 		793C053117D645CDCC572BA2 /* KeychainManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBF5CA90B5D6DFFECC61B3ED /* KeychainManager.swift */; };
 		8992D9DCD41D4F19CA27851E /* AlertsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 304CBEB6CB9FE94C464AED31 /* AlertsView.swift */; };
 		5D7A1C0FE2B34A9C88F10A22 /* SyntheticsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D7A1C0FE2B34A9C88F10A21 /* SyntheticsView.swift */; };
+		7C3E9A15B2D64F80AA10C332 /* VariableBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C3E9A15B2D64F80AA10C331 /* VariableBar.swift */; };
 		8B370E8553F1353DB5997B5B /* NativeTimeSeriesPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93D81C984BCDAD03572DB6F4 /* NativeTimeSeriesPanel.swift */; };
 		91971F74D287BB21C686E5E9 /* SharedDataManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 711CF58FD737D8F0ED4FD29B /* SharedDataManager.swift */; };
 		97AB2FC5849E9E5914B32110 /* CreateSilenceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30E359F9FE74B65C28F41800 /* CreateSilenceView.swift */; };
@@ -91,6 +92,7 @@
 		29452C41AC2DD8B0013B740E /* SilencesView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SilencesView.swift; sourceTree = "<group>"; };
 		304CBEB6CB9FE94C464AED31 /* AlertsView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AlertsView.swift; sourceTree = "<group>"; };
 		5D7A1C0FE2B34A9C88F10A21 /* SyntheticsView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SyntheticsView.swift; sourceTree = "<group>"; };
+		7C3E9A15B2D64F80AA10C331 /* VariableBar.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VariableBar.swift; sourceTree = "<group>"; };
 		30E359F9FE74B65C28F41800 /* CreateSilenceView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CreateSilenceView.swift; sourceTree = "<group>"; };
 		35B63B8F78C1D8C4CA309964 /* NativeBarChartPanel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NativeBarChartPanel.swift; sourceTree = "<group>"; };
 		3FE7D8AD3902F66DF6DB9F8D /* HapticManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HapticManager.swift; sourceTree = "<group>"; };
@@ -252,6 +254,7 @@
 				1B8AA46E20EF05D58EE6F5BB /* NativeCharts */,
 				304CBEB6CB9FE94C464AED31 /* AlertsView.swift */,
 				5D7A1C0FE2B34A9C88F10A21 /* SyntheticsView.swift */,
+				7C3E9A15B2D64F80AA10C331 /* VariableBar.swift */,
 				C14975CC65260F7E2ADD8DF3 /* CreateAnnotationView.swift */,
 				30E359F9FE74B65C28F41800 /* CreateSilenceView.swift */,
 				29452C41AC2DD8B0013B740E /* SilencesView.swift */,
@@ -424,6 +427,7 @@
 				3927567635429EE53F6B4E16 /* PanelCacheManager.swift in Sources */,
 				8992D9DCD41D4F19CA27851E /* AlertsView.swift in Sources */,
 				5D7A1C0FE2B34A9C88F10A22 /* SyntheticsView.swift in Sources */,
+				7C3E9A15B2D64F80AA10C332 /* VariableBar.swift in Sources */,
 				1BE09CE4E80C79E9BEB25045 /* CreateAnnotationView.swift in Sources */,
 				97AB2FC5849E9E5914B32110 /* CreateSilenceView.swift in Sources */,
 				B5FDFE884562486032AB9C17 /* SilencesView.swift in Sources */,
