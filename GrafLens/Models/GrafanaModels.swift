@@ -439,6 +439,124 @@ struct DashboardTagCount: Codable {
     let count: Int
 }
 
+// MARK: - Synthetic Monitoring
+
+/// A Synthetic Monitoring check, as returned by the SM datasource proxy
+/// (`/sm/check/list`). The check type is inferred from which key is present
+/// in `settings` (http, ping, dns, tcp, traceroute, ...).
+struct SyntheticCheck: Codable, Identifiable {
+    let id: Int
+    let job: String
+    let target: String
+    let enabled: Bool
+    let frequency: Int?
+    let probes: [Int]?
+    let labels: [SyntheticLabel]?
+    let settings: SyntheticSettings
+
+    var displayName: String { job.isEmpty ? target : job }
+
+    var checkType: String { settings.type }
+
+    var probeCount: Int { probes?.count ?? 0 }
+
+    /// Key used to join a check against its Prometheus series, which carry
+    /// `job` and `instance` (= target) labels.
+    var metricKey: String { SyntheticCheck.metricKey(job: job, instance: target) }
+
+    static func metricKey(job: String, instance: String) -> String {
+        "\(job)\u{1}\(instance)"
+    }
+
+    var frequencyDescription: String? {
+        guard let ms = frequency else { return nil }
+        let seconds = ms / 1000
+        if seconds >= 60 && seconds % 60 == 0 { return "\(seconds / 60)m" }
+        return "\(seconds)s"
+    }
+
+    var typeDisplayName: String {
+        switch checkType {
+        case "http": return "HTTP"
+        case "ping": return "Ping"
+        case "dns": return "DNS"
+        case "tcp": return "TCP"
+        case "traceroute": return "Traceroute"
+        case "grpc": return "gRPC"
+        case "multihttp": return "MultiHTTP"
+        case "scripted", "k6": return "Scripted"
+        case "browser": return "Browser"
+        default: return checkType.capitalized
+        }
+    }
+
+    var typeSymbolName: String {
+        switch checkType {
+        case "http", "multihttp": return "globe"
+        case "ping": return "wave.3.right"
+        case "dns": return "signpost.right"
+        case "tcp", "grpc": return "network"
+        case "traceroute": return "point.topleft.down.to.point.bottomright.curvepath"
+        case "scripted", "k6", "browser": return "curlybraces"
+        default: return "checkmark.shield"
+        }
+    }
+}
+
+struct SyntheticLabel: Codable, Hashable {
+    let name: String
+    let value: String
+}
+
+/// Decodes only the check type from the `settings` object by finding which
+/// known check-type key is present.
+struct SyntheticSettings: Codable {
+    let type: String
+
+    private static let knownTypes = [
+        "http", "ping", "dns", "tcp", "traceroute", "grpc",
+        "multihttp", "scripted", "k6", "browser"
+    ]
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: DynamicCodingKey.self)
+        for candidate in SyntheticSettings.knownTypes {
+            if let key = DynamicCodingKey(stringValue: candidate), container.contains(key) {
+                type = candidate
+                return
+            }
+        }
+        type = container.allKeys.first?.stringValue ?? "unknown"
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: DynamicCodingKey.self)
+        if let key = DynamicCodingKey(stringValue: type) {
+            try container.encodeNil(forKey: key)
+        }
+    }
+}
+
+struct DynamicCodingKey: CodingKey {
+    var stringValue: String
+    var intValue: Int? { nil }
+    init?(stringValue: String) { self.stringValue = stringValue }
+    init?(intValue: Int) { nil }
+}
+
+/// One labeled sample returned from an instant Prometheus query.
+struct SyntheticMetricSample {
+    let labels: [String: String]
+    let value: Double
+}
+
+/// Live status/uptime/latency for a single check, derived from Prometheus.
+struct SyntheticCheckStats {
+    var up: Bool?
+    var uptimePercent: Double?
+    var avgDurationSeconds: Double?
+}
+
 // MARK: - Server Connection
 
 struct ServerConnection: Codable, Identifiable, Hashable {

@@ -192,6 +192,102 @@ actor GrafanaAPIClient {
         return try await deleteRequest(path: "/api/playlists/\(uid)")
     }
 
+    // MARK: - Synthetic Monitoring
+
+    /// Lists Synthetic Monitoring checks via the SM datasource's proxy route.
+    /// Requires the SM app (a `synthetic-monitoring-datasource` datasource) to
+    /// be installed; throws `.notFound` otherwise.
+    func getSyntheticChecks() async throws -> [SyntheticCheck] {
+        let dataSources = try await getDataSources()
+        guard let smDS = dataSources.first(where: { $0.type == "synthetic-monitoring-datasource" }),
+              let uid = smDS.uid else {
+            throw GrafanaAPIError.notFound
+        }
+        return try await request(
+            path: "/api/datasources/proxy/uid/\(uid)/sm/check/list",
+            queryItems: [("includeAlerts", "false")]
+        )
+    }
+
+    /// The datasource most likely to hold Synthetic Monitoring metrics: the
+    /// default Prometheus datasource, falling back to the first Prometheus one.
+    func prometheusDatasource() async -> (uid: String, type: String)? {
+        guard let dataSources = try? await getDataSources() else { return nil }
+        let prom = dataSources.first(where: { $0.type == "prometheus" && $0.isDefault == true })
+            ?? dataSources.first(where: { $0.type == "prometheus" })
+        guard let ds = prom, let uid = ds.uid else { return nil }
+        return (uid, ds.type)
+    }
+
+    /// Runs an instant PromQL query and returns labeled samples. Best-effort:
+    /// returns `[]` on any error so callers can degrade gracefully.
+    func querySyntheticMetric(expr: String, datasourceUID: String, datasourceType: String) async -> [SyntheticMetricSample] {
+        let now = Int64(Date().timeIntervalSince1970 * 1000)
+        let queries: [[String: Any]] = [[
+            "refId": "A",
+            "datasource": ["uid": datasourceUID, "type": datasourceType],
+            "expr": expr,
+            "instant": true,
+            "maxDataPoints": 1
+        ]]
+        let body: [String: Any] = [
+            "queries": queries,
+            "from": "\(now - 3600000)",
+            "to": "\(now)"
+        ]
+
+        guard let baseURL = connection.baseURL else { return [] }
+        let url = baseURL.appendingPathComponent("/api/ds/query")
+        var urlRequest = URLRequest(url: url)
+        urlRequest.httpMethod = "POST"
+        if !connection.apiKey.isEmpty {
+            urlRequest.setValue("Bearer \(connection.apiKey)", forHTTPHeaderField: "Authorization")
+        }
+        urlRequest.setValue("application/json", forHTTPHeaderField: "Accept")
+        urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        urlRequest.httpBody = try? JSONSerialization.data(withJSONObject: body)
+
+        guard let (data, response) = try? await session.data(for: urlRequest),
+              let httpResponse = response as? HTTPURLResponse,
+              (200..<300).contains(httpResponse.statusCode),
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let results = json["results"] as? [String: Any],
+              let refDict = results["A"] as? [String: Any],
+              let frames = refDict["frames"] as? [[String: Any]] else {
+            return []
+        }
+
+        var samples: [SyntheticMetricSample] = []
+        for frame in frames {
+            guard let schema = frame["schema"] as? [String: Any],
+                  let fields = schema["fields"] as? [[String: Any]],
+                  let frameData = frame["data"] as? [String: Any],
+                  let columns = frameData["values"] as? [[Any]] else { continue }
+            let labels = Self.extractSeriesLabels(fields)
+            if let valueColumn = columns.last, let last = valueColumn.last,
+               let value = Self.numericValue(last) {
+                samples.append(SyntheticMetricSample(labels: labels, value: value))
+            }
+        }
+        return samples
+    }
+
+    private static func extractSeriesLabels(_ fields: [[String: Any]]) -> [String: String] {
+        for field in fields.reversed() {
+            if let labels = field["labels"] as? [String: String], !labels.isEmpty {
+                return labels
+            }
+        }
+        return [:]
+    }
+
+    private static func numericValue(_ value: Any) -> Double? {
+        if let d = value as? Double { return d }
+        if let i = value as? Int { return Double(i) }
+        if let s = value as? String { return Double(s) }
+        return nil
+    }
+
     // MARK: - Panel Data Query
 
     /// Queries a panel's datasource and returns the latest value(s) for stat/gauge widgets.
