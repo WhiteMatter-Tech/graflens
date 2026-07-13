@@ -2,6 +2,12 @@
 
 A native iOS, iPadOS, and macOS app for viewing Grafana dashboards. Connect to any Grafana instance, browse your dashboards by folder, and view panels with full OIDC/OAuth support.
 
+## Try the Beta
+
+Test the latest GrafLens builds via TestFlight:
+
+**[Join the beta on TestFlight →](https://testflight.apple.com/join/ZnHaWNhT)**
+
 ## Features
 
 - **Multi-server support** - Connect to any Grafana instance with a service account token
