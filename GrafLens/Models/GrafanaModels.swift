@@ -58,6 +58,22 @@ struct DashboardDetail: Codable {
     let refresh: RefreshValue?
     let templating: Templating?
 
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decodeIfPresent(Int.self, forKey: .id)
+        uid = try container.decodeIfPresent(String.self, forKey: .uid)
+        title = try container.decodeIfPresent(String.self, forKey: .title)
+        description = try container.decodeIfPresent(String.self, forKey: .description)
+        tags = try container.decodeIfPresent([String].self, forKey: .tags)
+        panels = try container.decodeIfPresent([Panel].self, forKey: .panels)
+        rows = try container.decodeIfPresent([Row].self, forKey: .rows)
+        time = try container.decodeIfPresent(TimeRange.self, forKey: .time)
+        refresh = try container.decodeIfPresent(RefreshValue.self, forKey: .refresh)
+        // Never let a malformed template variable fail the whole dashboard:
+        // decode templating leniently and drop to nil on any error.
+        templating = (try? container.decodeIfPresent(Templating.self, forKey: .templating)) ?? nil
+    }
+
     var allPanels: [Panel] {
         var result: [Panel] = []
         if let panels = panels {
