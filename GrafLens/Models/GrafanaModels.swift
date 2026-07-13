@@ -712,6 +712,18 @@ struct SyntheticCheckStats {
     var avgDurationSeconds: Double?
 }
 
+/// Subset of `/api/frontend/settings` used to discover datasources without
+/// the admin-only `/api/datasources` endpoint (available to any user).
+struct FrontendSettings: Codable {
+    let datasources: [String: FrontendDatasource]?
+}
+
+struct FrontendDatasource: Codable {
+    let type: String?
+    let uid: String?
+    let name: String?
+}
+
 // MARK: - Server Connection
 
 struct ServerConnection: Codable, Identifiable, Hashable {

@@ -195,23 +195,52 @@ actor GrafanaAPIClient {
     // MARK: - Synthetic Monitoring
 
     /// Lists Synthetic Monitoring checks via the SM datasource's proxy route.
-    /// Requires the SM app (a `synthetic-monitoring-datasource` datasource) to
-    /// be installed; throws `.notFound` otherwise.
+    /// Throws `.notFound` when the SM app isn't installed (or its backend isn't
+    /// ready), which the UI renders as a clean "not available" state.
     func getSyntheticChecks() async throws -> [SyntheticCheck] {
-        let dataSources = try await getDataSources()
-        guard let smDS = dataSources.first(where: { $0.type == "synthetic-monitoring-datasource" }),
-              let uid = smDS.uid else {
+        guard let uid = try await findSyntheticDatasourceUID() else {
             throw GrafanaAPIError.notFound
         }
-        return try await request(
-            path: "/api/datasources/proxy/uid/\(uid)/sm/check/list",
-            queryItems: [("includeAlerts", "false")]
-        )
+        do {
+            return try await request(
+                path: "/api/datasources/proxy/uid/\(uid)/sm/check/list",
+                queryItems: [("includeAlerts", "false")]
+            )
+        } catch GrafanaAPIError.serverError {
+            // Datasource exists but the SM backend isn't reachable/initialized.
+            // Treat as unavailable rather than surfacing a raw 5xx.
+            throw GrafanaAPIError.notFound
+        }
     }
 
-    /// The datasource most likely to hold Synthetic Monitoring metrics: the
-    /// default Prometheus datasource, falling back to the first Prometheus one.
+    /// Finds the Synthetic Monitoring datasource UID. Prefers
+    /// `/api/frontend/settings` (readable by any authenticated user, including
+    /// Viewer tokens) and only falls back to the admin-only `/api/datasources`
+    /// if that endpoint is unavailable. Returns nil when no SM datasource
+    /// exists — without hitting the admin endpoint in that common case.
+    private func findSyntheticDatasourceUID() async throws -> String? {
+        do {
+            let settings: FrontendSettings = try await request(path: "/api/frontend/settings")
+            return settings.datasources?.values
+                .first(where: { $0.type == "synthetic-monitoring-datasource" })?.uid
+        } catch {
+            let dataSources = try await getDataSources()
+            return dataSources.first(where: { $0.type == "synthetic-monitoring-datasource" })?.uid
+        }
+    }
+
+    /// The datasource most likely to hold Synthetic Monitoring metrics: a
+    /// Prometheus datasource. Uses `/api/frontend/settings` (non-admin) so the
+    /// stats overlay works on Viewer tokens too; falls back to the admin
+    /// `/api/datasources`. Best-effort — returns nil on any failure.
     func prometheusDatasource() async -> (uid: String, type: String)? {
+        if let settings: FrontendSettings = try? await request(path: "/api/frontend/settings"),
+           let map = settings.datasources {
+            let candidates = map.values.filter { $0.type == "prometheus" }
+            if let ds = candidates.first, let uid = ds.uid {
+                return (uid, "prometheus")
+            }
+        }
         guard let dataSources = try? await getDataSources() else { return nil }
         let prom = dataSources.first(where: { $0.type == "prometheus" && $0.isDefault == true })
             ?? dataSources.first(where: { $0.type == "prometheus" })
