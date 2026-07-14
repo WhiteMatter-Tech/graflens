@@ -1,6 +1,13 @@
-# GrafLens
+<p align="center">
+  <img src=".github/logo.png" alt="GrafLens" width="150" height="150">
+</p>
 
-A native iOS, iPadOS, and macOS app for viewing Grafana dashboards. Connect to any Grafana instance, browse your dashboards by folder, and view panels with full OIDC/OAuth support.
+<h1 align="center">GrafLens</h1>
+
+<p align="center">
+  A native iOS, iPadOS, and macOS app for viewing Grafana dashboards.<br>
+  Connect to any Grafana instance, browse your dashboards by folder, and view panels with full OIDC/OAuth support.
+</p>
 
 ## Try the Beta
 
