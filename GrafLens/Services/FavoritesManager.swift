@@ -6,13 +6,24 @@ class FavoritesManager: ObservableObject {
     @Published var favoriteUIDs: Set<String> = []
     @Published var recentDashboards: [RecentDashboard] = []
 
-    private let favoritesKey = "favoriteDashboardUIDs"
-    private let recentsKey = "recentDashboards"
+    private var favoritesKey = "favoriteDashboardUIDs-unscoped"
+    private var recentsKey = "recentDashboards-unscoped"
     private let maxRecents = 15
 
-    init() {
-        loadFavorites()
-        loadRecents()
+    func selectConnection(_ id: UUID?) {
+        let defaults = UserDefaults.standard
+        favoritesKey = "favoriteDashboardUIDs-" + (id?.uuidString ?? "none")
+        recentsKey = "recentDashboards-" + (id?.uuidString ?? "none")
+        // Legacy favorites belonged to the connection active at upgrade time.
+        if id != nil && !defaults.bool(forKey: "favoritesV2Migrated") {
+            if defaults.object(forKey: favoritesKey) == nil {
+                defaults.set(defaults.object(forKey: "favoriteDashboardUIDs"), forKey: favoritesKey)
+                defaults.set(defaults.object(forKey: "recentDashboards"), forKey: recentsKey)
+            }
+            defaults.set(true, forKey: "favoritesV2Migrated")
+        }
+        favoriteUIDs = []; recentDashboards = []
+        loadFavorites(); loadRecents()
     }
 
     // MARK: - Favorites

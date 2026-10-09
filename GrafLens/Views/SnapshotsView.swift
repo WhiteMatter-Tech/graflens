@@ -175,17 +175,7 @@ struct CreateSnapshotView: View {
         isSaving = true
         error = nil
 
-        let payload = DashboardSavePayload(
-            id: dashboard.id,
-            uid: dashboard.uid,
-            title: dashboard.title,
-            description: dashboard.description,
-            tags: dashboard.tags,
-            panels: dashboard.panels,
-            time: dashboard.time,
-            refresh: dashboard.refresh,
-            version: nil
-        )
+        let payload = dashboard.document
 
         let request = SnapshotCreateRequest(dashboard: payload, expires: expiration.seconds)
 

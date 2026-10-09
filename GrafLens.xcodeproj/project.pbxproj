@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+        F20000000000000000000011 /* PanelSessionCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000012; };
+        F20000000000000000000001 /* NativePanelData.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000003; };
+        F20000000000000000000002 /* NativePanelData.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000003; };
 		123615E639D9B7B045095EA4 /* NativeStatPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8C2E0336E54BCDD07087222 /* NativeStatPanel.swift */; };
 		13E4BFD4C419F04676ECD5D4 /* FolderManagementView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD8B16DE6879101D21AF83F4 /* FolderManagementView.swift */; };
 		1BE09CE4E80C79E9BEB25045 /* CreateAnnotationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C14975CC65260F7E2ADD8DF3 /* CreateAnnotationView.swift */; };
@@ -16,7 +19,7 @@
 		25970FBA986FD51B01713E48 /* GrafanaAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000003 /* GrafanaAPIClient.swift */; };
 		3927567635429EE53F6B4E16 /* PanelCacheManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95777EFCAF2CDAEF5C2D782B /* PanelCacheManager.swift */; };
 		44AA315E87A7582D76EB182F /* HapticManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FE7D8AD3902F66DF6DB9F8D /* HapticManager.swift */; };
-		58584914F438E7D625C3E7FC /* GrafLensWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 27E977DD64ED8F07D12C622B /* GrafLensWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		58584914F438E7D625C3E7FC /* GrafLensWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 27E977DD64ED8F07D12C622B /* GrafLensWidget.appex */; platformFilters = (ios, ); settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		632F2413244C8139DD55DA9D /* FavoritesManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F010CBF1F08E7E82EBC72AF3 /* FavoritesManager.swift */; };
 		742846ADADCC9A021E0B3F83 /* NativeBarChartPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35B63B8F78C1D8C4CA309964 /* NativeBarChartPanel.swift */; };
 		7759C5D6B874AEB85C43A1B4 /* GrafanaModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000002 /* GrafanaModels.swift */; };
@@ -82,6 +85,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+        F20000000000000000000012 /* PanelSessionCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelSessionCache.swift; sourceTree = "<group>"; };
+        F20000000000000000000003 /* NativePanelData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativePanelData.swift; sourceTree = "<group>"; };
 		0B97FA5A53F6AA5B2764F02B /* PlaylistsView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PlaylistsView.swift; sourceTree = "<group>"; };
 		0E44E10D95F7DEB504689C53 /* AlertsViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AlertsViewModel.swift; sourceTree = "<group>"; };
 		1F10F6974089CABF30048148 /* DashboardEditView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DashboardEditView.swift; sourceTree = "<group>"; };
@@ -202,6 +207,7 @@
 			isa = PBXGroup;
 			children = (
 				AB000002 /* GrafanaModels.swift */,
+                F20000000000000000000003 /* NativePanelData.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -210,6 +216,7 @@
 			isa = PBXGroup;
 			children = (
 				AB000003 /* GrafanaAPIClient.swift */,
+                F20000000000000000000012 /* PanelSessionCache.swift */,
 				AB000004 /* ConnectionManager.swift */,
 				AB000016 /* WebAuthManager.swift */,
 				AB000018 /* StoreManager.swift */,
@@ -386,6 +393,7 @@
 			files = (
 				9CAA85A9FDDB39A7FCF91248 /* GrafLensWidget.swift in Sources */,
 				7759C5D6B874AEB85C43A1B4 /* GrafanaModels.swift in Sources */,
+                F20000000000000000000002 /* NativePanelData.swift in Sources */,
 				25970FBA986FD51B01713E48 /* GrafanaAPIClient.swift in Sources */,
 				F7D23F92F81F3364C965FC3A /* SharedDataManager.swift in Sources */,
 			);
@@ -397,6 +405,8 @@
 			files = (
 				AA000001 /* GrafLensApp.swift in Sources */,
 				AA000002 /* GrafanaModels.swift in Sources */,
+                F20000000000000000000001 /* NativePanelData.swift in Sources */,
+                F20000000000000000000011 /* PanelSessionCache.swift in Sources */,
 				AA000003 /* GrafanaAPIClient.swift in Sources */,
 				AA000004 /* ConnectionManager.swift in Sources */,
 				AA000005 /* DashboardListViewModel.swift in Sources */,
@@ -444,6 +454,7 @@
 		7BFB1F77EDDDB2FB6CDE43E8 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = GrafLensWidget;
+			platformFilters = (ios, );
 			target = 39742A4989446C6A2DB6C231 /* GrafLensWidget */;
 			targetProxy = C18E1ACAD0CCC178F4B8680E /* PBXContainerItemProxy */;
 		};
@@ -576,7 +587,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = GrafLens/GrafLens.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1600;
+				CURRENT_PROJECT_VERSION = 2000;
 				DEVELOPMENT_TEAM = AD2VN8P4JY;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = GrafLens/Info.plist;
@@ -591,7 +602,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.1;
+				MARKETING_VERSION = 2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = tech.whitematter.graflens;
 				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = tech.whitematter.graflens;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -611,7 +622,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = GrafLens/GrafLens.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1600;
+				CURRENT_PROJECT_VERSION = 2000;
 				DEVELOPMENT_TEAM = AD2VN8P4JY;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = GrafLens/Info.plist;
@@ -626,7 +637,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.1;
+				MARKETING_VERSION = 2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = tech.whitematter.graflens;
 				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = tech.whitematter.graflens;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -645,7 +656,7 @@
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				CODE_SIGN_ENTITLEMENTS = GrafLensWidget/GrafLensWidget.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1600;
+				CURRENT_PROJECT_VERSION = 2000;
 				DEVELOPMENT_TEAM = AD2VN8P4JY;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = GrafLensWidget/Info.plist;
@@ -655,7 +666,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.0.1;
+				MARKETING_VERSION = 2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = tech.whitematter.graflens.widget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -672,7 +683,7 @@
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				CODE_SIGN_ENTITLEMENTS = GrafLensWidget/GrafLensWidget.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1600;
+				CURRENT_PROJECT_VERSION = 2000;
 				DEVELOPMENT_TEAM = AD2VN8P4JY;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = GrafLensWidget/Info.plist;
@@ -682,7 +693,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.0.1;
+				MARKETING_VERSION = 2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = tech.whitematter.graflens.widget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;

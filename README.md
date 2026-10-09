@@ -1,4 +1,4 @@
-# GrafLens
+# GrafLens 2.0
 
 A native iOS, iPadOS, and macOS app for viewing Grafana dashboards. Connect to any Grafana instance, browse your dashboards by folder, and view panels with full OIDC/OAuth support.
 
@@ -6,13 +6,20 @@ A native iOS, iPadOS, and macOS app for viewing Grafana dashboards. Connect to a
 
 - **Multi-server support** - Connect to any Grafana instance with a service account token
 - **Dashboard browser** - Browse all dashboards organized by folder with search
-- **Panel viewer** - View individual panels rendered via embedded web views
+- **Native charts** - Interactive time-series, stat, and gauge rendering for supported Prometheus panels, with Grafana fallback
+- **Adaptive dashboards** - Refined chart cards, compact metric tiles, and layouts for iPhone, iPad, and Mac
+- **Reliable refresh** - Time-range and appearance updates, manual refresh, and optional foreground auto-refresh
+- **Panel viewer** - View complex panels through embedded Grafana views with loading, retry, and browser sign-in support
+- **Chart inspection** - Crosshair selection, accessible reading controls, series toggles, and built-in annotations
+- **Safe dashboard edits** - Preserve graph configuration and version checks when editing metadata
 - **OIDC/OAuth login** - Sign in via Authentik, Okta, or any OIDC provider for panel rendering
 - **Time range picker** - Switch between 5m, 1h, 6h, 24h, 7d, 30d ranges
 - **Data sources view** - See all configured data sources at a glance
 - **Full-screen panels** - Tap any panel to expand it
 - **Connection persistence** - Saved connections for quick reconnect
 - **Universal app** - Runs on iPhone, iPad, and Mac (Catalyst)
+
+See [the 2.0 release notes](V2_RELEASE_NOTES.md) for supported native configurations, upgrade notes, and validation.
 
 ## Requirements
 

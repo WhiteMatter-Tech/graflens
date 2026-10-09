@@ -43,6 +43,8 @@ struct DashboardEntity: AppEntity {
 
     var id: String
     var title: String
+    var connectionID: UUID? { UUID(uuidString: String(id.split(separator: ":").first ?? "")) }
+    var dashboardUID: String { id.components(separatedBy: "::").dropFirst().joined(separator: "::") }
 
     var displayRepresentation: DisplayRepresentation {
         DisplayRepresentation(title: "\(title)")
@@ -50,11 +52,14 @@ struct DashboardEntity: AppEntity {
 }
 
 struct DashboardEntityQuery: EntityQuery {
+    static func identifier(_ uid: String) -> String {
+        "\(SharedDataManager.loadActiveConnection()?.id.uuidString ?? "none")::\(uid)"
+    }
     func entities(for identifiers: [String]) async throws -> [DashboardEntity] {
         let dashboards = SharedDataManager.loadCachedDashboards()
         return identifiers.map { uid in
-            if let dash = dashboards.first(where: { $0.uid == uid }) {
-                return DashboardEntity(id: dash.uid, title: dash.title)
+            if let dash = dashboards.first(where: { Self.identifier($0.uid) == uid }) {
+                return DashboardEntity(id: uid, title: dash.title)
             }
             return DashboardEntity(id: uid, title: uid)
         }
@@ -64,12 +69,13 @@ struct DashboardEntityQuery: EntityQuery {
         if let connection = SharedDataManager.loadActiveConnection() {
             let client = GrafanaAPIClient(connection: connection)
             if let results = try? await client.searchDashboards() {
-                SharedDataManager.cacheDashboardList(results)
-                return results.map { DashboardEntity(id: $0.uid, title: $0.title) }
+                guard SharedDataManager.loadActiveConnection()?.id == connection.id else { return [] }
+                SharedDataManager.cacheDashboardList(results, connectionID: connection.id)
+                return results.map { DashboardEntity(id: Self.identifier($0.uid), title: $0.title) }
             }
         }
         let cached = SharedDataManager.loadCachedDashboards()
-        return cached.map { DashboardEntity(id: $0.uid, title: $0.title) }
+        return cached.map { DashboardEntity(id: Self.identifier($0.uid), title: $0.title) }
     }
 }
 
@@ -99,7 +105,10 @@ struct PanelEntityQuery: EntityQuery {
         var results: [PanelEntity] = []
         for identifier in identifiers {
             guard let range = identifier.range(of: Self.separator, options: .backwards) else { continue }
-            let dashUID = String(identifier[..<range.lowerBound])
+            let scopedDashboard = String(identifier[..<range.lowerBound])
+            let parts = scopedDashboard.components(separatedBy: Self.separator)
+            guard let first = parts.first, UUID(uuidString: first) == SharedDataManager.loadActiveConnection()?.id else { continue }
+            let dashUID = parts.dropFirst().joined(separator: Self.separator)
             guard let panelID = Int(identifier[range.upperBound...]) else { continue }
             let panels = SharedDataManager.loadCachedPanels(dashboardUID: dashUID)
             let title = panels.first(where: { $0.id == panelID })?.title ?? "Panel \(panelID)"
@@ -110,12 +119,12 @@ struct PanelEntityQuery: EntityQuery {
 
     func suggestedEntities() async throws -> [PanelEntity] {
         if let dashboard = dashboardDependency?.dashboard {
-            let panels = SharedDataManager.loadCachedPanels(dashboardUID: dashboard.id)
+            let panels = SharedDataManager.loadCachedPanels(dashboardUID: dashboard.dashboardUID)
             return panels.map { panel in
                 PanelEntity(
                     id: "\(dashboard.id)\(Self.separator)\(panel.id)",
                     title: panel.title,
-                    dashboardUID: dashboard.id,
+                    dashboardUID: dashboard.dashboardUID,
                     panelID: panel.id
                 )
             }
@@ -164,20 +173,19 @@ struct PanelWidgetProvider: AppIntentTimelineProvider {
         }
 
         guard let panel = configuration.panel,
-              let dashboard = configuration.dashboard else {
+              let dashboard = configuration.dashboard,
+              dashboard.connectionID == connection.id,
+              panel.id.hasPrefix(connection.id.uuidString + "::"),
+              panel.dashboardUID == dashboard.dashboardUID else {
             return .unconfigured
         }
 
-        // Load the panel snapshot cached by the main app's WKWebView.
-        // Falls back to Grafana's server-side render API if no snapshot exists.
-        var imageData = SharedDataManager.loadPanelSnapshot(
-            dashboardUID: panel.dashboardUID,
-            panelID: panel.panelID
-        )
+        let from = "now-\(configuration.timeRange ?? "6h")"
+        let snapshot = SharedDataManager.loadPanelSnapshot(connectionID: connection.id,
+            dashboardUID: panel.dashboardUID, panelID: panel.panelID, from: from, theme: "dark")
+        var imageData = snapshot?.imageData
 
         if imageData == nil {
-            let timeRange = configuration.timeRange ?? "6h"
-            let from = "now-\(timeRange)"
             let (width, height): (Int, Int) = {
                 switch family {
                 case .systemSmall:  return (400, 400)
@@ -196,7 +204,7 @@ struct PanelWidgetProvider: AppIntentTimelineProvider {
         }
 
         return PanelWidgetEntry(
-            date: Date(),
+            date: snapshot?.capturedAt ?? Date(),
             dashboardTitle: dashboard.title,
             panelTitle: panel.title,
             panelImageData: imageData,
@@ -269,7 +277,11 @@ struct PanelWidgetView: View {
                 // Full-bleed panel image — looks exactly like Grafana.
                 Image(uiImage: uiImage)
                     .resizable()
-                    .aspectRatio(contentMode: .fill)
+                    .aspectRatio(contentMode: .fit)
+                    .overlay(alignment: .bottomTrailing) {
+                        Text(entry.date, style: .time).font(.caption2.monospacedDigit())
+                            .padding(5).background(.regularMaterial, in: Capsule()).padding(6)
+                    }
             } else {
                 // No snapshot yet — user needs to open the dashboard in the app first.
                 VStack(spacing: 6) {
@@ -287,8 +299,8 @@ struct PanelWidgetView: View {
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
 
-                    Text("Open this dashboard in the app to capture a snapshot")
-                        .font(.system(size: 9))
+                    Text("Share a panel image in dark mode, or enable Grafana image rendering.")
+                        .font(.caption2)
                         .foregroundStyle(.tertiary)
                         .multilineTextAlignment(.center)
                 }

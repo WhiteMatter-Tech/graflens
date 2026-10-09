@@ -7,6 +7,7 @@ class DashboardListViewModel: ObservableObject {
     @Published var folders: [String: [DashboardSearchResult]] = [:]
     @Published var folderOrder: [String] = []
     @Published var isLoading = false
+    private var loadGeneration = UUID()
     @Published var error: String?
     @Published var searchText = ""
 
@@ -24,18 +25,21 @@ class DashboardListViewModel: ObservableObject {
         if searchText.isEmpty { return items }
         let query = searchText.lowercased()
         return items.filter {
-            $0.title.lowercased().contains(query) ||
+            $0.title.lowercased().contains(query) || $0.displayFolderTitle.lowercased().contains(query) ||
             ($0.tags ?? []).contains(where: { $0.lowercased().contains(query) })
         }
     }
 
     func loadDashboards(client: GrafanaAPIClient?) async {
         guard let client = client else { return }
+        let generation = UUID(); loadGeneration = generation
         isLoading = true
         error = nil
 
         do {
             let results = try await client.searchDashboards()
+            guard generation == loadGeneration else { return }
+            guard !Task.isCancelled else { isLoading = false; return }
             allDashboards = results
 
             var grouped: [String: [DashboardSearchResult]] = [:]
@@ -57,7 +61,7 @@ class DashboardListViewModel: ObservableObject {
             dashboards = results
 
             // Cache for widget configuration
-            SharedDataManager.cacheDashboardList(results)
+            SharedDataManager.cacheDashboardList(results, connectionID: client.connectionID)
 
             // Preload panels for all dashboards so the widget panel picker
             // can show every panel without the user opening each dashboard.
@@ -65,7 +69,8 @@ class DashboardListViewModel: ObservableObject {
                 await Self.preloadPanelsForWidget(dashboards: results, client: client)
             }
         } catch {
-            self.error = error.localizedDescription
+            guard generation == loadGeneration else { return }
+            if !Task.isCancelled { self.error = error.localizedDescription }
         }
 
         isLoading = false
@@ -77,7 +82,7 @@ class DashboardListViewModel: ObservableObject {
             var inFlight = 0
             for dash in dashboards {
                 // Skip dashboards whose cached panels already include query info.
-                let cached = SharedDataManager.loadCachedPanels(dashboardUID: dash.uid)
+                let cached = SharedDataManager.loadCachedPanels(dashboardUID: dash.uid, connectionID: client.connectionID)
                 if !cached.isEmpty && cached.contains(where: { $0.targets != nil && !($0.targets!.isEmpty) }) {
                     continue
                 }
@@ -92,7 +97,7 @@ class DashboardListViewModel: ObservableObject {
                         .filter { $0.isVisualization }
                         .map { DashboardDetailViewModel.panelInfoFrom($0) }
                     if !panelInfos.isEmpty {
-                        SharedDataManager.cachePanelList(dashboardUID: dash.uid, panels: panelInfos)
+                        SharedDataManager.cachePanelList(dashboardUID: dash.uid, panels: panelInfos, connectionID: client.connectionID)
                     }
                 }
             }

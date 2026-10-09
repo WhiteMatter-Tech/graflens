@@ -9,7 +9,6 @@ struct ConnectView: View {
     @State private var error: String?
     @State private var showSavedConnections = false
     @State private var useAuthentication = false
-    @State private var showLegacyTokenWarning = false
 
     var body: some View {
         NavigationStack {
@@ -54,7 +53,7 @@ struct ConnectView: View {
 
                         Toggle(isOn: $useAuthentication.animation()) {
                             VStack(alignment: .leading, spacing: 2) {
-                                Text("Sign in with API key")
+                                Text("Use a service account token")
                                     .font(.subheadline)
                                 Text("Not required for public servers")
                                     .font(.caption2)
@@ -77,11 +76,9 @@ struct ConnectView: View {
                                     .textFieldStyle(.roundedBorder)
                                     .textInputAutocapitalization(.never)
                                     .autocorrectionDisabled()
-                                if apiKey.hasPrefix("eyJ") {
-                                    Label("This looks like an old API key format. Grafana v13+ requires a service account token (glsa_...).", systemImage: "exclamationmark.triangle")
-                                        .font(.caption2)
-                                        .foregroundStyle(.orange)
-                                }
+                                Text("Use a token created in Grafana, not an Authentik token or OAuth client secret.")
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
                             }
                             .transition(.opacity.combined(with: .move(edge: .top)))
                         }
@@ -159,7 +156,7 @@ struct ConnectView: View {
                     // Help text
                     if useAuthentication {
                         VStack(alignment: .leading, spacing: 8) {
-                            Label("How to get an API key", systemImage: "questionmark.circle")
+                            Label("How to get a Grafana token", systemImage: "questionmark.circle")
                                 .font(.subheadline.bold())
 
                             Text("1. Go to your Grafana instance")
@@ -194,11 +191,6 @@ struct ConnectView: View {
             .background(Color(.systemGroupedBackground))
             .navigationBarTitleDisplayMode(.inline)
         }
-        .alert("Service Account Token Required", isPresented: $showLegacyTokenWarning) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text("This Grafana server is version 13 or later, which only accepts service account tokens. Old API keys (starting with eyJ...) are no longer valid.\n\nGo to Administration > Service Accounts in Grafana, create a service account, and generate a new token (it will start with glsa_).")
-        }
     }
 
     private func connect() {
@@ -215,10 +207,6 @@ struct ConnectView: View {
             do {
                 try await connectionManager.connect(to: connection)
                 HapticManager.success()
-                if let major = connectionManager.serverMajorVersion, major >= 13,
-                   !apiKey.isEmpty, !apiKey.hasPrefix("glsa_") {
-                    showLegacyTokenWarning = true
-                }
             } catch {
                 self.error = error.localizedDescription
                 HapticManager.error()

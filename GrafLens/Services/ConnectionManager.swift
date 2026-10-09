@@ -10,6 +10,7 @@ class ConnectionManager: ObservableObject {
 
     private let connectionsKey = "savedConnections"
     private let activeConnectionKey = "activeConnectionID"
+    private var connectionAttempt = UUID()
 
     var apiClient: GrafanaAPIClient? {
         guard let connection = activeConnection else { return nil }
@@ -17,6 +18,15 @@ class ConnectionManager: ObservableObject {
     }
 
     init() {
+        #if DEBUG
+        let args = ProcessInfo.processInfo.arguments
+        if let index = args.firstIndex(of: "--fixture-server"), args.indices.contains(index + 1),
+           let url = URL(string: args[index + 1]), ["localhost", "127.0.0.1"].contains(url.host ?? "") {
+            let connection = ServerConnection(id: UUID(uuidString: "00000000-0000-0000-0000-000000000002")!, name: "Design preview", url: url.absoluteString, useServiceAccount: false)
+            connections = [connection]; activeConnection = connection; isConnected = true
+            return
+        }
+        #endif
         loadConnections()
     }
 
@@ -30,6 +40,7 @@ class ConnectionManager: ObservableObject {
             connections[index] = connection
             if activeConnection?.id == connection.id {
                 activeConnection = connection
+                SharedDataManager.saveActiveConnection(connection)
             }
             saveConnections()
         }
@@ -38,15 +49,16 @@ class ConnectionManager: ObservableObject {
     func removeConnection(_ connection: ServerConnection) {
         connections.removeAll { $0.id == connection.id }
         if activeConnection?.id == connection.id {
-            activeConnection = nil
-            isConnected = false
+            disconnect()
         }
         saveConnections()
     }
 
     func connect(to connection: ServerConnection) async throws {
+        let attempt = UUID(); connectionAttempt = attempt
         let client = GrafanaAPIClient(connection: connection)
         let health = try await client.checkHealth()
+        guard !Task.isCancelled, attempt == connectionAttempt else { throw CancellationError() }
         serverMajorVersion = health.version.flatMap { v in
             Int(v.split(separator: ".").first ?? "")
         }
@@ -63,7 +75,9 @@ class ConnectionManager: ObservableObject {
     }
 
     func disconnect() {
+        connectionAttempt = UUID()
         activeConnection = nil
+        SharedDataManager.clearActiveConnection()
         isConnected = false
         serverMajorVersion = nil
         UserDefaults.standard.removeObject(forKey: activeConnectionKey)

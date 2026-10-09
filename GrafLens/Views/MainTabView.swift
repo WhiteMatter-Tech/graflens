@@ -45,6 +45,10 @@ struct MainTabView: View {
     private var iPadLayout: some View {
         NavigationSplitView {
             List(selection: $selectedTab) {
+                Section {
+                    ServerSwitcherMenu().padding(.vertical, 4)
+                }
+                .listRowBackground(Color.clear)
                 Section("Browse") {
                     Label("Dashboards", systemImage: "square.grid.2x2")
                         .tag(SidebarTab.dashboards)
@@ -70,11 +74,6 @@ struct MainTabView: View {
             }
             .listStyle(.sidebar)
             .navigationTitle("GrafLens")
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    ServerSwitcherMenu()
-                }
-            }
         } detail: {
             switch selectedTab {
             case .dashboards:

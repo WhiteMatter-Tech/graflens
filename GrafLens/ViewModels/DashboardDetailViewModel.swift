@@ -7,6 +7,7 @@ class DashboardDetailViewModel: ObservableObject {
     @Published var meta: DashboardMeta?
     @Published var panels: [Panel] = []
     @Published var isLoading = false
+    private var loadGeneration = UUID()
     @Published var error: String?
 
     let dashboardUID: String
@@ -19,11 +20,14 @@ class DashboardDetailViewModel: ObservableObject {
 
     func loadDashboard(client: GrafanaAPIClient?) async {
         guard let client = client else { return }
+        let generation = UUID(); loadGeneration = generation
         isLoading = true
         error = nil
 
         do {
             let response = try await client.getDashboard(uid: dashboardUID)
+            guard generation == loadGeneration else { return }
+            guard !Task.isCancelled else { isLoading = false; return }
             dashboard = response.dashboard
             meta = response.meta
             panels = response.dashboard.allPanels
@@ -32,9 +36,10 @@ class DashboardDetailViewModel: ObservableObject {
             let panelInfos = panels.filter { $0.isVisualization }.map {
                 Self.panelInfoFrom($0)
             }
-            SharedDataManager.cachePanelList(dashboardUID: dashboardUID, panels: panelInfos)
+            SharedDataManager.cachePanelList(dashboardUID: dashboardUID, panels: panelInfos, connectionID: client.connectionID)
         } catch {
-            self.error = error.localizedDescription
+            guard generation == loadGeneration else { return }
+            if !Task.isCancelled { self.error = error.localizedDescription }
         }
 
         isLoading = false

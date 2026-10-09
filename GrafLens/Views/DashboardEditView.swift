@@ -73,23 +73,13 @@ struct DashboardEditView: View {
 
         let tags = tagsText.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
 
-        let payload = DashboardSavePayload(
-            id: dashboard.id,
-            uid: dashboard.uid,
-            title: title,
-            description: description,
-            tags: tags,
-            panels: dashboard.panels,
-            time: dashboard.time,
-            refresh: dashboard.refresh,
-            version: nil
-        )
+        let payload = dashboard.updatingMetadata(title: title, description: description, tags: tags)
 
         let request = DashboardSaveRequest(
             dashboard: payload,
             folderUid: meta?.folderUid,
             message: "Updated via GrafLens",
-            overwrite: true
+            overwrite: false
         )
 
         Task {
