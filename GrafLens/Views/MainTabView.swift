@@ -4,11 +4,61 @@ struct MainTabView: View {
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
 
     var body: some View {
-        if horizontalSizeClass == .regular {
+        if #available(iOS 18.0, *) {
+            adaptiveLayout
+        } else if horizontalSizeClass == .regular {
             iPadLayout
         } else {
             iPhoneLayout
         }
+    }
+
+    // Keep one navigation tree as a fold changes size classes. The system
+    // adapts tabs, the sidebar, and reserved camera/hinge regions in place.
+    @State private var adaptiveTab: SidebarTab = .dashboards
+
+    @available(iOS 18.0, *)
+    private var adaptiveLayout: some View {
+        TabView(selection: $adaptiveTab) {
+            Tab("Dashboards", systemImage: "square.grid.2x2", value: .dashboards) {
+                DashboardListView()
+            }
+            Tab("Alerts", systemImage: "bell.badge", value: .alerts) {
+                AlertsView()
+            }
+            Tab("Synthetics", systemImage: "waveform.path.ecg", value: .synthetics) {
+                SyntheticsView()
+            }
+            Tab("Data Sources", systemImage: "server.rack", value: .dataSources) {
+                DataSourcesView()
+            }
+            Tab("Settings", systemImage: "gear", value: .settings) {
+                SettingsView()
+            }
+            TabSection("Manage") {
+                Tab("Folders", systemImage: "folder", value: SidebarTab.folders) {
+                    NavigationStack { FolderManagementView() }
+                }
+                Tab("Playlists", systemImage: "play.rectangle", value: SidebarTab.playlists) {
+                    NavigationStack { PlaylistsView() }
+                }
+                Tab("Snapshots", systemImage: "camera", value: SidebarTab.snapshots) {
+                    NavigationStack { SnapshotsView() }
+                }
+            }
+        }
+        .tabViewStyle(.sidebarAdaptable)
+        .tint(.orange)
+        #if DEBUG
+        // Screenshot capture: `--initial-tab alerts` opens that tab at launch.
+        .onAppear {
+            let args = ProcessInfo.processInfo.arguments
+            if let index = args.firstIndex(of: "--initial-tab"), args.indices.contains(index + 1),
+               let tab = SidebarTab(rawValue: args[index + 1]) {
+                adaptiveTab = tab
+            }
+        }
+        #endif
     }
 
     // MARK: - iPhone Tab Layout
@@ -50,6 +100,10 @@ struct MainTabView: View {
     private var iPadLayout: some View {
         NavigationSplitView {
             List(selection: $selectedTab) {
+                Section {
+                    ServerSwitcherMenu().padding(.vertical, 4)
+                }
+                .listRowBackground(Color.clear)
                 Section("Browse") {
                     Label("Dashboards", systemImage: "square.grid.2x2")
                         .tag(SidebarTab.dashboards)
@@ -77,11 +131,6 @@ struct MainTabView: View {
             }
             .listStyle(.sidebar)
             .navigationTitle("GrafLens")
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    ServerSwitcherMenu()
-                }
-            }
         } detail: {
             switch selectedTab {
             case .dashboards:

@@ -7,7 +7,14 @@ class WebAuthManager: ObservableObject {
 
     let dataStore: WKWebsiteDataStore
 
-    private let authCheckKey = "webAuthCompleted"
+    @Published var sessionRevision = 0
+    private var authCheckKey = "webAuthCompleted-unscoped"
+
+    func selectConnection(_ id: UUID?) {
+        authCheckKey = "webAuthCompleted-" + (id?.uuidString ?? "none")
+        isAuthenticated = UserDefaults.standard.bool(forKey: authCheckKey)
+        sessionRevision += 1
+    }
 
     init() {
         self.dataStore = WKWebsiteDataStore.default()
@@ -21,6 +28,7 @@ class WebAuthManager: ObservableObject {
     }
 
     func markAuthenticated() {
+        sessionRevision += 1
         isAuthenticated = true
         UserDefaults.standard.set(true, forKey: authCheckKey)
     }

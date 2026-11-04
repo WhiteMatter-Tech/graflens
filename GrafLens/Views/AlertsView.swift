@@ -21,9 +21,9 @@ struct AlertsView: View {
                     }
                 } else if viewModel.firingAlerts.isEmpty && viewModel.ruleGroups.isEmpty {
                     ContentUnavailableView {
-                        Label("No Alerts", systemImage: "bell.slash")
+                        Label("No alert rules", systemImage: "bell.slash")
                     } description: {
-                        Text("No alert rules or firing alerts found.")
+                        Text("This server returned no alert rules or firing alerts. Configure monitoring in Grafana to track your services.")
                     }
                 } else {
                     alertList
@@ -47,6 +47,17 @@ struct AlertsView: View {
 
     private var alertList: some View {
         List {
+            Section {
+                VStack(alignment: .leading, spacing: 8) {
+                    Label(viewModel.firingAlerts.isEmpty ? "No firing alerts" : "\(viewModel.firingAlerts.count) firing alerts",
+                          systemImage: viewModel.firingAlerts.isEmpty ? "bell.badge" : "exclamationmark.circle.fill")
+                        .font(.headline)
+                        .foregroundStyle(viewModel.firingAlerts.isEmpty ? Color.primary : Color.red)
+                    if let date = viewModel.lastUpdated {
+                        Text("Checked \(date.formatted(date: .omitted, time: .shortened))").font(.caption).foregroundStyle(.secondary)
+                    }
+                }.padding(.vertical, 8)
+            }
             if !viewModel.firingAlerts.isEmpty {
                 Section("Firing") {
                     ForEach(viewModel.firingAlerts) { alert in

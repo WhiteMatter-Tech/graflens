@@ -3,6 +3,8 @@ import SwiftUI
 struct ServerSwitcherMenu: View {
     @EnvironmentObject var connectionManager: ConnectionManager
 
+    @State private var switchError: String?
+
     var body: some View {
         Menu {
             if let active = connectionManager.activeConnection {
@@ -45,6 +47,9 @@ struct ServerSwitcherMenu: View {
             .background(.regularMaterial)
             .clipShape(Capsule())
         }
+        .alert("Couldn't switch server", isPresented: Binding(get: { switchError != nil }, set: { if !$0 { switchError = nil } })) {
+            Button("OK") { switchError = nil }
+        } message: { Text(switchError ?? "") }
     }
 
     private func switchTo(_ connection: ServerConnection) {
@@ -53,7 +58,10 @@ struct ServerSwitcherMenu: View {
             do {
                 try await connectionManager.connect(to: connection)
                 HapticManager.success()
+            } catch is CancellationError {
+                return
             } catch {
+                switchError = error.localizedDescription
                 HapticManager.error()
             }
         }

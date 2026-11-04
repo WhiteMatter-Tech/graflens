@@ -2,7 +2,7 @@
   <img src=".github/logo.png" alt="GrafLens" width="150" height="150">
 </p>
 
-<h1 align="center">GrafLens</h1>
+<h1 align="center">GrafLens 2.0</h1>
 
 <p align="center">
   A native iOS, iPadOS, and macOS app for viewing Grafana dashboards.<br>
@@ -19,18 +19,28 @@ Test the latest GrafLens builds via TestFlight:
 
 - **Multi-server support** - Connect to any Grafana instance with a service account token
 - **Dashboard browser** - Browse all dashboards organized by folder with search
-- **Panel viewer** - View individual panels rendered via embedded web views
+- **Native charts** - Interactive time-series, stat, and gauge rendering for supported Prometheus panels, with Grafana fallback
+- **Adaptive dashboards** - Refined chart cards, compact metric tiles, and layouts for iPhone, iPad, and Mac
+- **iPhone Duo layouts** - Adaptive tabs/sidebar preserve navigation across size changes; book-pose panel rows leave room for the hinge
+- **Reliable refresh** - Time-range and appearance updates, manual refresh, and optional foreground auto-refresh
+- **Panel viewer** - View complex panels through embedded Grafana views with loading, retry, and browser sign-in support
+- **Chart inspection** - Crosshair selection, accessible reading controls, series toggles, and built-in annotations
+- **Safe dashboard edits** - Preserve graph configuration and version checks when editing metadata
 - **OIDC/OAuth login** - Sign in via Authentik, Okta, or any OIDC provider for panel rendering
+- **Template variables** - Pick custom, interval, and textbox variable values from a bar above the dashboard
+- **Synthetic Monitoring** - Browse Grafana Synthetic Monitoring checks with live status, uptime, and latency
 - **Time range picker** - Switch between 5m, 1h, 6h, 24h, 7d, 30d ranges
 - **Data sources view** - See all configured data sources at a glance
 - **Full-screen panels** - Tap any panel to expand it
 - **Connection persistence** - Saved connections for quick reconnect
 - **Universal app** - Runs on iPhone, iPad, and Mac (Catalyst)
 
+See [the 2.0 release notes](V2_RELEASE_NOTES.md) for supported native configurations, upgrade notes, and validation.
+
 ## Requirements
 
 - iOS 17.0+ / iPadOS 17.0+ / macOS 14.0+ (Catalyst)
-- Xcode 15.0+
+- Xcode 27.1+ (iOS 27.1 SDK for Duo reserved-region support)
 - A Grafana instance with a Service Account token
 
 ## Getting Started

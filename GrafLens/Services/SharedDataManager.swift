@@ -8,6 +8,11 @@ enum SharedDataManager {
         UserDefaults(suiteName: appGroupID)
     }
 
+    private static func scope(_ connectionID: UUID? = nil) -> String {
+        (connectionID ?? loadActiveConnection()?.id)?.uuidString ?? "disconnected"
+    }
+    static func clearActiveConnection() { sharedDefaults?.removeObject(forKey: "widgetActiveConnection") }
+
     // MARK: - Connection
 
     static func saveActiveConnection(_ connection: ServerConnection) {
@@ -48,30 +53,30 @@ enum SharedDataManager {
 
     // MARK: - Cache dashboard/panel list for widget config
 
-    static func cacheDashboardList(_ dashboards: [DashboardSearchResult]) {
+    static func cacheDashboardList(_ dashboards: [DashboardSearchResult], connectionID: UUID) {
         guard let defaults = sharedDefaults else { return }
         if let data = try? JSONEncoder().encode(dashboards) {
-            defaults.set(data, forKey: "cachedDashboards")
+            defaults.set(data, forKey: "cachedDashboards_" + scope(connectionID))
         }
     }
 
     static func loadCachedDashboards() -> [DashboardSearchResult] {
         guard let defaults = sharedDefaults,
-              let data = defaults.data(forKey: "cachedDashboards"),
+              let data = defaults.data(forKey: "cachedDashboards_" + scope()),
               let dashboards = try? JSONDecoder().decode([DashboardSearchResult].self, from: data) else { return [] }
         return dashboards
     }
 
-    static func cachePanelList(dashboardUID: String, panels: [PanelInfo]) {
+    static func cachePanelList(dashboardUID: String, panels: [PanelInfo], connectionID: UUID) {
         guard let defaults = sharedDefaults else { return }
         if let data = try? JSONEncoder().encode(panels) {
-            defaults.set(data, forKey: "cachedPanels_\(dashboardUID)")
+            defaults.set(data, forKey: "cachedPanels_\(scope(connectionID))_\(dashboardUID)")
         }
     }
 
-    static func loadCachedPanels(dashboardUID: String) -> [PanelInfo] {
+    static func loadCachedPanels(dashboardUID: String, connectionID: UUID? = nil) -> [PanelInfo] {
         guard let defaults = sharedDefaults,
-              let data = defaults.data(forKey: "cachedPanels_\(dashboardUID)"),
+              let data = defaults.data(forKey: "cachedPanels_\(scope(connectionID))_\(dashboardUID)"),
               let panels = try? JSONDecoder().decode([PanelInfo].self, from: data) else { return [] }
         return panels
     }
@@ -84,20 +89,33 @@ enum SharedDataManager {
             .appendingPathComponent("PanelSnapshots", isDirectory: true)
     }
 
-    private static func snapshotURL(dashboardUID: String, panelID: Int) -> URL? {
-        snapshotDirectory?.appendingPathComponent("\(dashboardUID)_\(panelID).jpg")
+    private static func snapshotURL(connectionID: UUID, dashboardUID: String, panelID: Int, from: String, theme: String) -> URL? {
+        // Encode arbitrary dashboard UIDs without making them filesystem path components.
+        let key = "\(connectionID.uuidString)|\(dashboardUID)|\(panelID)|\(from)|\(theme)"
+        let filename = Data(key.utf8).base64EncodedString().replacingOccurrences(of: "/", with: "_")
+        return snapshotDirectory?.appendingPathComponent(filename + ".json")
     }
 
-    static func savePanelSnapshot(dashboardUID: String, panelID: Int, imageData: Data) {
-        guard let dir = snapshotDirectory else { return }
+    struct CachedSnapshot: Codable {
+        let imageData: Data
+        let capturedAt: Date
+    }
+
+    static func savePanelSnapshot(connectionID: UUID, dashboardUID: String, panelID: Int, from: String, theme: String, imageData: Data) {
+        guard let dir = snapshotDirectory,
+              let url = snapshotURL(connectionID: connectionID, dashboardUID: dashboardUID, panelID: panelID, from: from, theme: theme) else { return }
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-        guard let url = snapshotURL(dashboardUID: dashboardUID, panelID: panelID) else { return }
-        try? imageData.write(to: url)
+        let snapshot = CachedSnapshot(imageData: imageData, capturedAt: Date())
+        if let data = try? JSONEncoder().encode(snapshot) { try? data.write(to: url, options: .atomic) }
     }
 
-    static func loadPanelSnapshot(dashboardUID: String, panelID: Int) -> Data? {
-        guard let url = snapshotURL(dashboardUID: dashboardUID, panelID: panelID) else { return nil }
-        return try? Data(contentsOf: url)
+    static func loadPanelSnapshot(connectionID: UUID, dashboardUID: String, panelID: Int, from: String, theme: String) -> CachedSnapshot? {
+        guard let url = snapshotURL(connectionID: connectionID, dashboardUID: dashboardUID, panelID: panelID, from: from, theme: theme),
+              let data = try? Data(contentsOf: url),
+              let snapshot = try? JSONDecoder().decode(CachedSnapshot.self, from: data),
+              Date().timeIntervalSince(snapshot.capturedAt) >= 0,
+              Date().timeIntervalSince(snapshot.capturedAt) < 15 * 60 else { return nil }
+        return snapshot
     }
 }
 

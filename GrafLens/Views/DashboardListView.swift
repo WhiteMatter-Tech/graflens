@@ -5,8 +5,10 @@ struct DashboardListView: View {
     @EnvironmentObject var favoritesManager: FavoritesManager
     @StateObject private var viewModel = DashboardListViewModel()
 
+    @State private var path: [DashboardSearchResult] = []
+
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             Group {
                 if viewModel.isLoading && viewModel.dashboards.isEmpty {
                     VStack(spacing: 16) {
@@ -39,7 +41,7 @@ struct DashboardListView: View {
                 }
             }
             .navigationTitle("Dashboards")
-            .searchable(text: $viewModel.searchText, prompt: "Search dashboards")
+            .searchable(text: $viewModel.searchText, prompt: "Search dashboards, folders, or tags")
             .refreshable {
                 await viewModel.loadDashboards(client: connectionManager.apiClient)
             }
@@ -57,18 +59,35 @@ struct DashboardListView: View {
                 }
             }
         }
-        .task {
-            if viewModel.dashboards.isEmpty {
-                await viewModel.loadDashboards(client: connectionManager.apiClient)
-            }
+        .task(id: connectionManager.activeConnection?.id) {
+            await viewModel.loadDashboards(client: connectionManager.apiClient)
         }
         .onChange(of: viewModel.dashboards) { _, dashboards in
             SpotlightManager.indexDashboards(dashboards)
+            #if DEBUG
+            let args = ProcessInfo.processInfo.arguments
+            let uidIndex = args.firstIndex(of: "--fixture-dashboard-uid").map { args.index(after: $0) }
+            let uid = uidIndex.flatMap { args.indices.contains($0) ? args[$0] : nil }
+            if args.contains("--fixture-server"), args.contains("--fixture-dashboard"), path.isEmpty,
+               let dashboard = uid.flatMap({ uid in dashboards.first { $0.uid == uid } }) ?? dashboards.first { path = [dashboard] }
+            #endif
         }
     }
 
     private var dashboardList: some View {
         List {
+            if viewModel.searchText.isEmpty {
+                Section {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Your observatory").font(.title2.weight(.semibold))
+                        Text("\(viewModel.dashboards.count) \(viewModel.dashboards.count == 1 ? "dashboard" : "dashboards") across \(viewModel.folderOrder.count) \(viewModel.folderOrder.count == 1 ? "folder" : "folders")")
+                            .font(.subheadline).foregroundStyle(.secondary)
+                    }
+                    .padding(.vertical, 8)
+                }
+                .listRowBackground(Color.clear)
+                .listRowInsets(EdgeInsets(top: 0, leading: 4, bottom: 8, trailing: 4))
+            }
             // Favorites section
             let favorites = viewModel.dashboards.filter { favoritesManager.isFavorite($0.uid) }
             if !favorites.isEmpty && viewModel.searchText.isEmpty {
@@ -92,7 +111,7 @@ struct DashboardListView: View {
             // Recents section
             if !favoritesManager.recentDashboards.isEmpty && viewModel.searchText.isEmpty {
                 Section {
-                    ForEach(favoritesManager.recentDashboards.prefix(5)) { recent in
+                    ForEach(favoritesManager.recentDashboards.filter { !favoritesManager.isFavorite($0.uid) }.prefix(3)) { recent in
                         if let dashboard = viewModel.dashboards.first(where: { $0.uid == recent.uid }) {
                             NavigationLink(value: dashboard) {
                                 DashboardRow(dashboard: dashboard, isFavorite: favoritesManager.isFavorite(dashboard.uid), onToggleFavorite: {
@@ -130,6 +149,11 @@ struct DashboardListView: View {
             }
         }
         .listStyle(.insetGrouped)
+        .overlay {
+            if !viewModel.searchText.isEmpty && viewModel.filteredFolderOrder.isEmpty {
+                ContentUnavailableView.search(text: viewModel.searchText)
+            }
+        }
         .navigationDestination(for: DashboardSearchResult.self) { dashboard in
             DashboardDetailView(uid: dashboard.uid, title: dashboard.title)
                 .onAppear {
@@ -145,11 +169,17 @@ struct DashboardRow: View {
     let onToggleFavorite: () -> Void
 
     var body: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 4) {
+        HStack(spacing: 12) {
+            Image(systemName: "chart.xyaxis.line")
+                .font(.system(size: 19, weight: .medium))
+                .foregroundStyle(.orange)
+                .frame(width: 42, height: 42)
+                .background(.orange.opacity(0.09), in: RoundedRectangle(cornerRadius: 12))
+                .accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 6) {
                 Text(dashboard.title)
-                    .font(.body)
-                    .lineLimit(1)
+                    .font(.body.weight(.medium))
+                    .lineLimit(2)
 
                 if let tags = dashboard.tags, !tags.isEmpty {
                     ScrollView(.horizontal, showsIndicators: false) {
@@ -175,10 +205,13 @@ struct DashboardRow: View {
                 onToggleFavorite()
             } label: {
                 Image(systemName: isFavorite ? "star.fill" : "star")
-                    .foregroundStyle(isFavorite ? .orange : .secondary.opacity(0.4))
-                    .font(.caption)
+                    .foregroundStyle(isFavorite ? .orange : .secondary)
+                    .font(.body)
+                    .frame(width: 44, height: 44)
             }
             .buttonStyle(.plain)
+            .accessibilityLabel(isFavorite ? "Remove \(dashboard.title) from favorites" : "Add \(dashboard.title) to favorites")
         }
+        .padding(.vertical, 4)
     }
 }

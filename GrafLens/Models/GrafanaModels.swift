@@ -46,40 +46,69 @@ struct DashboardMeta: Codable {
     let updatedBy: String?
 }
 
+/// Keep the complete document so metadata edits never discard plugin configuration.
 struct DashboardDetail: Codable {
-    let id: Int?
-    let uid: String?
-    let title: String?
-    let description: String?
-    let tags: [String]?
-    let panels: [Panel]?
-    let rows: [Row]?
-    let time: TimeRange?
-    let refresh: RefreshValue?
-    let templating: Templating?
+    let document: [String: JSONValue]
 
-    var allPanels: [Panel] {
-        var result: [Panel] = []
-        if let panels = panels {
-            for panel in panels {
-                if panel.type == "row" {
-                    if let nested = panel.panels {
-                        result.append(contentsOf: nested)
-                    }
-                } else {
-                    result.append(panel)
-                }
-            }
-        }
-        if let rows = rows {
-            for row in rows {
-                if let rowPanels = row.panels {
-                    result.append(contentsOf: rowPanels)
-                }
-            }
-        }
-        return result
+    init(document: [String: JSONValue]) { self.document = document }
+    init(from decoder: Decoder) throws { document = try decoder.singleValueContainer().decode([String: JSONValue].self) }
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(document)
     }
+
+    var id: Int? { document["id"]?.int }
+    var uid: String? { document["uid"]?.string }
+    var title: String? { document["title"]?.string }
+    var description: String? { document["description"]?.string }
+    var tags: [String]? { document["tags"]?.decode() }
+    var panels: [Panel]? { document["panels"]?.decode() }
+    var rows: [Row]? { document["rows"]?.decode() }
+    var time: TimeRange? { document["time"]?.decode() }
+    var refresh: RefreshValue? { document["refresh"]?.decode() }
+    var templating: Templating? { document["templating"]?.decode() }
+
+    var allPanels: [Panel] { sections.flatMap(\.panels) }
+    var hasNativeAnnotations: Bool {
+        (document["annotations"]?["list"]?.array ?? []).contains { $0["enable"]?.bool != false }
+    }
+    var allowsNativeRendering: Bool {
+        // Built-in dashboard annotations can be fetched through the annotations API.
+        // Custom annotation queries still need Grafana's datasource evaluation context.
+        (document["annotations"]?["list"]?.array ?? []).filter { $0["enable"]?.bool != false }.allSatisfy {
+            $0["builtIn"]?.int == 1 && ($0["target"]?["type"]?.string ?? "dashboard") == "dashboard"
+                && ($0["target"]?["tags"]?.array ?? []).isEmpty
+        }
+    }
+
+    var sections: [DashboardSection] {
+        var sections = [DashboardSection(id: "overview", title: nil, panels: [])]
+        for panel in panels ?? [] {
+            if panel.type == "row" {
+                sections.append(DashboardSection(id: "row-\(panel.id)", title: panel.displayTitle, panels: panel.panels ?? []))
+            } else {
+                sections[sections.count - 1].panels.append(panel)
+            }
+        }
+        for (index, row) in (rows ?? []).enumerated() {
+            sections.append(DashboardSection(id: "legacy-\(index)", title: row.title, panels: row.panels ?? []))
+        }
+        return sections.filter { !$0.panels.isEmpty }
+    }
+
+    func updatingMetadata(title: String, description: String, tags: [String]) -> [String: JSONValue] {
+        var updated = document
+        updated["title"] = .string(title)
+        updated["description"] = .string(description)
+        updated["tags"] = .array(tags.map(JSONValue.string))
+        return updated
+    }
+}
+
+struct DashboardSection: Identifiable {
+    let id: String
+    let title: String?
+    var panels: [Panel]
 }
 
 enum RefreshValue: Codable {
@@ -117,25 +146,29 @@ struct Row: Codable {
 }
 
 struct Panel: Codable, Identifiable {
-    let id: Int
-    let title: String?
-    let type: String?
-    let description: String?
-    let gridPos: GridPos?
-    let panels: [Panel]?
-    let targets: [Target]?
-    let datasource: FlexibleDatasource?
-
+    let document: [String: JSONValue]
+    init(document: [String: JSONValue]) { self.document = document }
+    init(from decoder: Decoder) throws { document = try decoder.singleValueContainer().decode([String: JSONValue].self) }
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(document)
+    }
+    var id: Int { document["id"]?.int ?? 0 }
+    var title: String? { document["title"]?.string }
+    var type: String? { document["type"]?.string }
+    var isNumberPanel: Bool { type == "stat" || type == "singlestat" }
+    var description: String? { document["description"]?.string }
+    var gridPos: GridPos? { document["gridPos"]?.decode() }
+    var panels: [Panel]? { document["panels"]?.decode() }
+    var targets: [Target]? { document["targets"]?.decode() }
+    var datasource: FlexibleDatasource? { document["datasource"]?.decode() }
+    var options: [String: JSONValue] { document["options"]?.object ?? [:] }
+    var fieldDefaults: [String: JSONValue] { document["fieldConfig"]?["defaults"]?.object ?? [:] }
     var displayTitle: String {
-        let t = title ?? ""
-        return t.isEmpty ? "Panel \(id)" : t
+        guard let title, !title.isEmpty else { return "Panel \(id)" }
+        return title
     }
-
-    var isVisualization: Bool {
-        guard let type = type else { return false }
-        let nonVisual = ["row", "text"]
-        return !nonVisual.contains(type)
-    }
+    var isVisualization: Bool { type != nil && type != "row" && type != "text" }
 }
 
 struct GridPos: Codable {
@@ -508,17 +541,7 @@ struct DashboardSaveRequest: Codable {
     let overwrite: Bool
 }
 
-struct DashboardSavePayload: Codable {
-    let id: Int?
-    let uid: String?
-    let title: String?
-    let description: String?
-    let tags: [String]?
-    let panels: [Panel]?
-    let time: TimeRange?
-    let refresh: RefreshValue?
-    let version: Int?
-}
+typealias DashboardSavePayload = [String: JSONValue]
 
 struct DashboardSaveResponse: Codable {
     let id: Int?
@@ -758,5 +781,48 @@ struct ServerConnection: Codable, Identifiable, Hashable {
         components.host = parsed.host
         components.port = parsed.port
         return components.url
+    }
+}
+
+// MARK: - Lossless JSON documents
+
+indirect enum JSONValue: Codable, Equatable, Sendable {
+    case object([String: JSONValue]), array([JSONValue]), string(String)
+    case integer(Int64), number(Double), bool(Bool), null
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.singleValueContainer()
+        if c.decodeNil() { self = .null }
+        else if let v = try? c.decode(Bool.self) { self = .bool(v) }
+        else if let v = try? c.decode(Int64.self) { self = .integer(v) }
+        else if let v = try? c.decode(Double.self) { self = .number(v) }
+        else if let v = try? c.decode(String.self) { self = .string(v) }
+        else if let v = try? c.decode([JSONValue].self) { self = .array(v) }
+        else { self = .object(try c.decode([String: JSONValue].self)) }
+    }
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.singleValueContainer()
+        switch self {
+        case .object(let v): try c.encode(v)
+        case .array(let v): try c.encode(v)
+        case .string(let v): try c.encode(v)
+        case .integer(let v): try c.encode(v)
+        case .number(let v): try c.encode(v)
+        case .bool(let v): try c.encode(v)
+        case .null: try c.encodeNil()
+        }
+    }
+    var object: [String: JSONValue]? { if case .object(let v) = self { return v }; return nil }
+    var array: [JSONValue]? { if case .array(let v) = self { return v }; return nil }
+    var string: String? { if case .string(let v) = self { return v }; return nil }
+    var bool: Bool? { if case .bool(let v) = self { return v }; return nil }
+    var double: Double? {
+        switch self { case .integer(let v): return Double(v); case .number(let v): return v; default: return nil }
+    }
+    var int: Int? { double.flatMap { Int(exactly: $0) } }
+    subscript(_ key: String) -> JSONValue? { object?[key] }
+    func decode<T: Decodable>() -> T? {
+        guard let data = try? JSONEncoder().encode(self) else { return nil }
+        return try? JSONDecoder().decode(T.self, from: data)
     }
 }

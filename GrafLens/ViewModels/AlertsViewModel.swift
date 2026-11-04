@@ -7,6 +7,7 @@ class AlertsViewModel: ObservableObject {
     @Published var ruleGroups: [AlertRuleGroup] = []
     @Published var isLoading = false
     @Published var error: String?
+    @Published var lastUpdated: Date?
     @Published var selectedAlertForSilence: GrafanaAlertInstance?
 
     func load(client: GrafanaAPIClient?) async {
@@ -21,6 +22,8 @@ class AlertsViewModel: ObservableObject {
             let alerts = try await alertsTask
             let rulesResponse = try await rulesTask
 
+            guard !Task.isCancelled else { isLoading = false; return }
+            lastUpdated = Date()
             firingAlerts = alerts.filter { $0.state?.lowercased() == "firing" }
             ruleGroups = rulesResponse.data?.groups ?? []
         } catch {

@@ -5,6 +5,8 @@ enum GrafanaAPIError: LocalizedError {
     case invalidResponse
     case unauthorized
     case forbidden
+    case webSignInRequired
+    case webPageReturned
     case notFound
     case serverError(Int)
     case networkError(Error)
@@ -14,8 +16,10 @@ enum GrafanaAPIError: LocalizedError {
         switch self {
         case .invalidURL: return "Invalid server URL"
         case .invalidResponse: return "Invalid response from server"
-        case .unauthorized: return "Unauthorized - check your token. Grafana v13+ requires a service account token (glsa_...). Old API keys are no longer accepted."
-        case .forbidden: return "Access forbidden - insufficient permissions"
+        case .unauthorized: return "Authentication was rejected (HTTP 401). Grafana or a sign-in proxy may have rejected this request. Check your Grafana service account token and whether your proxy allows Grafana API access. This response alone does not prove the token is invalid."
+        case .forbidden: return "Access was denied (HTTP 403). Check the service account’s Grafana permissions and any access rules in your sign-in proxy."
+        case .webSignInRequired: return "The API request reached a browser sign-in page. A proxy such as Authentik may require a separate session. Browser sign-in in GrafLens does not currently authenticate its API requests. Ask your administrator how Grafana API clients should authenticate."
+        case .webPageReturned: return "The server returned a web page instead of Grafana API data. Check that the server URL points to Grafana. A sign-in proxy may be intercepting API requests; browser sign-in in GrafLens does not currently authenticate its API requests."
         case .notFound: return "Resource not found"
         case .serverError(let code): return "Server error (\(code))"
         case .networkError(let error): return "Network error: \(error.localizedDescription)"
@@ -26,10 +30,12 @@ enum GrafanaAPIError: LocalizedError {
 
 actor GrafanaAPIClient {
     private let connection: ServerConnection
+    nonisolated let connectionID: UUID
     private let session: URLSession
 
     init(connection: ServerConnection) {
         self.connection = connection
+        self.connectionID = connection.id
         let config = URLSessionConfiguration.default
         config.timeoutIntervalForRequest = 30
         config.timeoutIntervalForResource = 60
@@ -192,6 +198,67 @@ actor GrafanaAPIClient {
         return try await deleteRequest(path: "/api/playlists/\(uid)")
     }
 
+    // MARK: - Native panel data
+
+    func queryNativePanel(_ panel: Panel, from: String, to: String = "now", annotationDashboardUID: String? = nil) async throws -> NativePanelResult {
+        guard NativePanelConfiguration.supported(panel) != nil else { throw NativePanelError.unsupported }
+        let targets = (panel.document["targets"]?.array ?? []).compactMap(\.object).filter { $0["hide"]?.bool != true }
+        guard !targets.isEmpty else { throw NativePanelError.unsupported }
+        var queries: [JSONValue] = []
+        let now = Date()
+        guard let seconds = Self.relativeSeconds(from), to == "now" else { throw NativePanelError.unsupported }
+        let start = now.addingTimeInterval(-seconds)
+        for target in targets {
+            guard let expression = target["expr"]?.string, !expression.isEmpty, !expression.contains("$"),
+                  target["instant"]?.bool != true, target["range"]?.bool != false, target["exemplar"]?.bool != true,
+                  target["format"]?.string ?? "time_series" == "time_series" else { throw NativePanelError.unsupported }
+            let ds = target["datasource"] ?? panel.document["datasource"]
+            guard let uid = ds?["uid"]?.string, !uid.contains("$"),
+                  ds?["type"]?.string == "prometheus" else { throw NativePanelError.unsupported }
+            var query = target
+            query["datasource"] = ds
+            query["range"] = .bool(true)
+            query["instant"] = .bool(false)
+            query["maxDataPoints"] = .integer(600)
+            query["intervalMs"] = .integer(Int64(Swift.max(seconds * 1000 / 600, 1000)))
+            queries.append(.object(query))
+        }
+        let body: [String: JSONValue] = ["queries": .array(queries),
+            "from": .string(String(Int64(start.timeIntervalSince1970 * 1000))),
+            "to": .string(String(Int64(now.timeIntervalSince1970 * 1000)))]
+        let response: JSONValue = try await postRequest(path: "/api/ds/query", body: body)
+        // Field-level settings supplied by a datasource cannot silently override the native configuration.
+        for result in response["results"]?.object?.values ?? Dictionary<String, JSONValue>().values {
+            for frame in result["frames"]?.array ?? [] {
+                for field in frame["schema"]?["fields"]?.array ?? [] where field["type"]?.string == "number" {
+                    let config = field["config"]?.object ?? [:]
+                    for key in ["unit", "decimals", "min", "max", "mappings", "thresholds", "color", "custom"] {
+                        if let setting = config[key], setting != .null, setting != panel.fieldDefaults[key] { throw NativePanelError.unsupported }
+                    }
+                }
+            }
+        }
+        let series = try NativeFrameDecoder.decode(response, targets: targets)
+        // Stat and gauge reduction of multiple fields needs Grafana's own layout.
+        if panel.type != "timeseries", series.count > 1 { throw NativePanelError.unsupported }
+        var result = NativePanelResult(series: series, from: start, to: now, loadedAt: Date())
+        if panel.type == "timeseries", let uid = annotationDashboardUID {
+            let annotations = try await getAnnotations(dashboardUID: uid, from: Int64(start.timeIntervalSince1970 * 1000), to: Int64(now.timeIntervalSince1970 * 1000), limit: 1000)
+            // Avoid claiming complete annotation support when the server truncated the result.
+            guard annotations.count < 1000 else { throw NativePanelError.unsupported }
+            result.annotations = annotations.filter { $0.panelId == nil || $0.panelId == 0 || $0.panelId == panel.id }
+        }
+        return result
+    }
+
+    static func relativeSeconds(_ from: String) -> TimeInterval? {
+        guard from.hasPrefix("now-"), let unit = from.last,
+              let n = Double(from.dropFirst(4).dropLast()), n.isFinite, n > 0,
+              let multiplier: Double = ["m": 60, "h": 3600, "d": 86400][String(unit)] else { return nil }
+        let seconds = n * multiplier
+        return seconds.isFinite && seconds <= 366 * 86400 ? seconds : nil
+    }
+
     // MARK: - Synthetic Monitoring
 
     /// Lists Synthetic Monitoring checks via the SM datasource's proxy route.
@@ -339,7 +406,6 @@ actor GrafanaAPIClient {
         }
 
         // Build a query for each target.
-        let now = Int64(Date().timeIntervalSince1970 * 1000)
         var queries: [[String: Any]] = []
         for (i, target) in targets.enumerated() {
             var q: [String: Any] = [
@@ -361,8 +427,8 @@ actor GrafanaAPIClient {
 
         let body: [String: Any] = [
             "queries": queries,
-            "from": "\(now - 21600000)",   // 6h ago in epoch ms
-            "to": "\(now)"
+            "from": from,
+            "to": to
         ]
 
         guard let baseURL = connection.baseURL else { throw GrafanaAPIError.invalidURL }
@@ -443,24 +509,8 @@ actor GrafanaAPIClient {
     }
 
     private static func formatPanelValue(_ value: Any) -> String {
-        if let n = value as? Double {
-            if n == n.rounded() && n < 1_000_000 {
-                return String(Int(n))
-            }
-            if n >= 1_000_000_000 {
-                return String(format: "%.1fB", n / 1_000_000_000)
-            }
-            if n >= 1_000_000 {
-                return String(format: "%.1fM", n / 1_000_000)
-            }
-            if n >= 10_000 {
-                return String(format: "%.1fK", n / 1_000)
-            }
-            return String(format: "%.1f", n)
-        }
-        if let n = value as? Int {
-            return String(n)
-        }
+        if value is NSNull { return "—" }
+        if let n = value as? Double { return MetricFormat.string(n, unit: "short") }
         return "\(value)"
     }
 
@@ -578,6 +628,38 @@ actor GrafanaAPIClient {
         return try await executeRequest(urlRequest)
     }
 
+    /// Classify only observable response facts. A 401 cannot identify which
+    /// authentication layer rejected the request. Never expose response bodies,
+    /// redirect queries, or credentials in the user-facing diagnostic.
+    nonisolated static func validateAPIResponse(data: Data, response: URLResponse) throws {
+        guard let response = response as? HTTPURLResponse else {
+            throw GrafanaAPIError.invalidResponse
+        }
+        // Preserve HTTP failures even when a gateway sends an HTML error page.
+        switch response.statusCode {
+        case 200..<300: break
+        case 401: throw GrafanaAPIError.unauthorized
+        case 403: throw GrafanaAPIError.forbidden
+        case 404: throw GrafanaAPIError.notFound
+        default: throw GrafanaAPIError.serverError(response.statusCode)
+        }
+        let prefix = String(decoding: data.prefix(8192), as: UTF8.self)
+            .trimmingCharacters(in: .whitespacesAndNewlines.union(CharacterSet(charactersIn: "\u{FEFF}")))
+            .lowercased()
+        let isHTML = ["text/html", "application/xhtml+xml"].contains(response.mimeType?.lowercased() ?? "")
+            || prefix.hasPrefix("<!doctype html") || prefix.hasPrefix("<html")
+            || prefix.hasPrefix("<head") || prefix.hasPrefix("<body") || prefix.hasPrefix("<form")
+        guard isHTML else { return }
+        let segments = Set((response.url?.path.lowercased() ?? "").split(separator: "/").map(String.init))
+        let loginPaths: Set<String> = ["login", "signin", "sign-in", "authorize", "oauth", "oauth2", "flow"]
+        let hasPasswordField = prefix.contains("<input")
+            && ["type=\"password\"", "type='password'", "type=password"].contains(where: prefix.contains)
+        if !segments.isDisjoint(with: loginPaths) || hasPasswordField {
+            throw GrafanaAPIError.webSignInRequired
+        }
+        throw GrafanaAPIError.webPageReturned
+    }
+
     private func executeRequest<T: Decodable>(_ urlRequest: URLRequest) async throws -> T {
         let data: Data
         let response: URLResponse
@@ -586,16 +668,7 @@ actor GrafanaAPIClient {
         } catch {
             throw GrafanaAPIError.networkError(error)
         }
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw GrafanaAPIError.invalidResponse
-        }
-        switch httpResponse.statusCode {
-        case 200..<300: break
-        case 401: throw GrafanaAPIError.unauthorized
-        case 403: throw GrafanaAPIError.forbidden
-        case 404: throw GrafanaAPIError.notFound
-        default: throw GrafanaAPIError.serverError(httpResponse.statusCode)
-        }
+        try Self.validateAPIResponse(data: data, response: response)
         do {
             return try JSONDecoder().decode(T.self, from: data)
         } catch {
@@ -624,36 +697,6 @@ actor GrafanaAPIClient {
         urlRequest.setValue("application/json", forHTTPHeaderField: "Accept")
         urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
-        let data: Data
-        let response: URLResponse
-        do {
-            (data, response) = try await session.data(for: urlRequest)
-        } catch {
-            throw GrafanaAPIError.networkError(error)
-        }
-
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw GrafanaAPIError.invalidResponse
-        }
-
-        switch httpResponse.statusCode {
-        case 200..<300:
-            break
-        case 401:
-            throw GrafanaAPIError.unauthorized
-        case 403:
-            throw GrafanaAPIError.forbidden
-        case 404:
-            throw GrafanaAPIError.notFound
-        default:
-            throw GrafanaAPIError.serverError(httpResponse.statusCode)
-        }
-
-        do {
-            let decoder = JSONDecoder()
-            return try decoder.decode(T.self, from: data)
-        } catch {
-            throw GrafanaAPIError.decodingError(error)
-        }
+        return try await executeRequest(urlRequest)
     }
 }

@@ -1,103 +1,74 @@
 import SwiftUI
 
 struct NativeGaugePanel: View {
-    let title: String
-    let value: Double
-    let min: Double
-    let max: Double
-    let unit: String?
-    let thresholds: [ThresholdStep]
-
-    init(title: String, value: Double, min: Double = 0, max: Double = 100, unit: String? = "%", thresholds: [ThresholdStep] = []) {
-        self.title = title
-        self.value = value
-        self.min = min
-        self.max = max
-        self.unit = unit
-        self.thresholds = thresholds.isEmpty ? Self.defaultThresholds : thresholds
+    let result: NativePanelResult
+    let configuration: NativePanelConfiguration
+    var compact = false
+    private var value: Double? {
+        configuration.reducer == "last" ? result.series.first?.samples.last?.value : result.series.first?.latest
     }
-
-    static let defaultThresholds: [ThresholdStep] = [
-        ThresholdStep(value: 0, color: .green),
-        ThresholdStep(value: 70, color: .orange),
-        ThresholdStep(value: 90, color: .red),
-    ]
-
-    private var normalizedValue: Double {
-        guard max > min else { return 0 }
+    private var fraction: Double {
+        guard let value, let min = configuration.minimum, let max = configuration.maximum, max > min else { return 0 }
         return Swift.min(Swift.max((value - min) / (max - min), 0), 1)
     }
-
     var body: some View {
-        VStack(spacing: 8) {
-            ZStack {
-                // Background arc
-                ArcShape(startAngle: .degrees(-210), endAngle: .degrees(30))
-                    .stroke(Color.secondary.opacity(0.15), style: StrokeStyle(lineWidth: 14, lineCap: .round))
+        if compact { compactGauge } else { dial }
+    }
 
-                // Value arc
-                ArcShape(
-                    startAngle: .degrees(-210),
-                    endAngle: .degrees(-210 + normalizedValue * 240)
-                )
-                .stroke(currentColor, style: StrokeStyle(lineWidth: 14, lineCap: .round))
-
-                // Value text
-                VStack(spacing: 2) {
-                    Text(formattedValue)
-                        .font(.system(size: 28, weight: .bold, design: .rounded))
-                        .foregroundStyle(currentColor)
-
-                    if let unit = unit {
-                        Text(unit)
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
+    private var compactGauge: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(MetricFormat.string(value, unit: configuration.unit, decimals: configuration.decimals))
+                .font(.system(size: 30, weight: .semibold, design: .rounded))
+                .monospacedDigit().lineLimit(1).minimumScaleFactor(0.5)
+                .foregroundStyle(ChartPalette.thresholdColor(value, configuration: configuration))
+            GeometryReader { geometry in
+                ZStack(alignment: .leading) {
+                    Capsule().fill(.secondary.opacity(0.12))
+                    if value != nil {
+                        Capsule().fill(ChartPalette.thresholdColor(value, configuration: configuration))
+                            .frame(width: geometry.size.width * fraction)
                     }
                 }
             }
-            .frame(height: 120)
-            .padding(.horizontal, 20)
-
-            Text(title)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
-        }
-        .padding()
-        .frame(maxWidth: .infinity)
-    }
-
-    private var formattedValue: String {
-        if value == value.rounded() {
-            return "\(Int(value))"
-        }
-        return String(format: "%.1f", value)
-    }
-
-    private var currentColor: Color {
-        guard !thresholds.isEmpty else { return .orange }
-        let sorted = thresholds.sorted { ($0.value ?? -.infinity) < ($1.value ?? -.infinity) }
-        var color: Color = .green
-        for step in sorted {
-            if let threshold = step.value, value >= threshold {
-                color = step.color
+            .frame(height: 6)
+            HStack {
+                Text(MetricFormat.string(configuration.minimum, unit: configuration.unit))
+                Spacer(minLength: 4)
+                Text(MetricFormat.string(configuration.maximum, unit: configuration.unit))
             }
+            .font(.caption2.monospacedDigit()).foregroundStyle(.secondary)
         }
-        return color
+        .padding(.horizontal, 12).padding(.bottom, 8)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(MetricFormat.string(value, unit: configuration.unit, decimals: configuration.decimals)), range \(MetricFormat.string(configuration.minimum, unit: configuration.unit)) to \(MetricFormat.string(configuration.maximum, unit: configuration.unit))")
     }
-}
 
-// MARK: - Arc Shape
-
-struct ArcShape: Shape {
-    let startAngle: Angle
-    let endAngle: Angle
-
-    func path(in rect: CGRect) -> Path {
-        var path = Path()
-        let center = CGPoint(x: rect.midX, y: rect.midY + 10)
-        let radius = min(rect.width, rect.height) / 2 - 10
-        path.addArc(center: center, radius: radius, startAngle: startAngle, endAngle: endAngle, clockwise: false)
-        return path
+    private var dial: some View {
+        VStack(spacing: 14) {
+            ZStack {
+                Circle().trim(from: 0, to: 0.75)
+                    .stroke(.secondary.opacity(0.12), style: StrokeStyle(lineWidth: 12, lineCap: .round))
+                Circle().trim(from: 0, to: 0.75 * fraction)
+                    .stroke(ChartPalette.thresholdColor(value, configuration: configuration), style: StrokeStyle(lineWidth: 12, lineCap: .round))
+                VStack(spacing: 5) {
+                    Text(MetricFormat.string(value, unit: configuration.unit, decimals: configuration.decimals))
+                        .font(.system(.title, design: .rounded, weight: .semibold))
+                        .monospacedDigit().lineLimit(1).minimumScaleFactor(0.5)
+                    Text("Latest reading").font(.caption).foregroundStyle(.secondary)
+                }
+                .rotationEffect(.degrees(-135)).padding(24)
+            }
+            .rotationEffect(.degrees(135))
+            .frame(width: 150, height: 150)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("Gauge, \(MetricFormat.string(value, unit: configuration.unit, decimals: configuration.decimals))")
+            HStack {
+                Text(MetricFormat.string(configuration.minimum, unit: configuration.unit))
+                Spacer()
+                Text(MetricFormat.string(configuration.maximum, unit: configuration.unit))
+            }
+            .font(.caption.monospacedDigit()).foregroundStyle(.secondary)
+        }
+        .padding(24).frame(maxWidth: .infinity)
     }
 }
