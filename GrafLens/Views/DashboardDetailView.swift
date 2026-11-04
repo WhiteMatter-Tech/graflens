@@ -31,6 +31,11 @@ struct DashboardDetailView: View {
                     Button("Try again") { Task { await reload() } }.buttonStyle(.borderedProminent)
                 }
             } else {
+                VStack(spacing: 0) {
+                if !viewModel.variables.isEmpty {
+                    VariableBar(viewModel: viewModel)
+                    Divider()
+                }
                 GeometryReader { geometry in
                     let layout = dashboardLayout(in: geometry)
                     ScrollView {
@@ -56,7 +61,7 @@ struct DashboardDetailView: View {
                                                         let panel = row.panels[index]
                                                         PanelCardView(panel: panel, dashboardUID: viewModel.dashboardUID, timeRange: selectedTimeRange,
                                                             refreshID: refreshID, allowsNative: allowsNative, includeAnnotations: viewModel.dashboard?.hasNativeAnnotations ?? false,
-                                                            cache: panelCache, onExpand: { HapticManager.light(); selectedPanel = panel })
+                                                            variables: viewModel.variableParams, cache: panelCache, onExpand: { HapticManager.light(); selectedPanel = panel })
                                                             .id(panel.id)
                                                     } else {
                                                         Color.clear.frame(height: 0)
@@ -79,6 +84,7 @@ struct DashboardDetailView: View {
                         .padding(20)
                     }
                     .refreshable { await reload() }
+                }
                 }
                 .background(Color(.systemGroupedBackground))
             }
@@ -110,7 +116,8 @@ struct DashboardDetailView: View {
         }
         .sheet(item: $selectedPanel) { panel in
             PanelFullScreenView(panel: panel, dashboardUID: viewModel.dashboardUID, timeRange: selectedTimeRange,
-                panels: viewModel.panels.filter { $0.type != "row" }, allowsNative: allowsNative, includeAnnotations: viewModel.dashboard?.hasNativeAnnotations ?? false)
+                panels: viewModel.panels.filter { $0.type != "row" }, allowsNative: allowsNative, includeAnnotations: viewModel.dashboard?.hasNativeAnnotations ?? false,
+                variables: viewModel.variableParams)
         }
         .sheet(isPresented: $showLogin) { GrafanaLoginView() }
         .sheet(isPresented: $showAnnotation) { CreateAnnotationView(dashboardUID: viewModel.dashboardUID, panelId: nil) }

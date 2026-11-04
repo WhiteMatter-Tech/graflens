@@ -259,6 +259,131 @@ actor GrafanaAPIClient {
         return seconds.isFinite && seconds <= 366 * 86400 ? seconds : nil
     }
 
+    // MARK: - Synthetic Monitoring
+
+    /// Lists Synthetic Monitoring checks via the SM datasource's proxy route.
+    /// Throws `.notFound` when the SM app isn't installed (or its backend isn't
+    /// ready), which the UI renders as a clean "not available" state.
+    func getSyntheticChecks() async throws -> [SyntheticCheck] {
+        guard let uid = try await findSyntheticDatasourceUID() else {
+            throw GrafanaAPIError.notFound
+        }
+        do {
+            return try await request(
+                path: "/api/datasources/proxy/uid/\(uid)/sm/check/list",
+                queryItems: [("includeAlerts", "false")]
+            )
+        } catch GrafanaAPIError.serverError {
+            // Datasource exists but the SM backend isn't reachable/initialized.
+            // Treat as unavailable rather than surfacing a raw 5xx.
+            throw GrafanaAPIError.notFound
+        }
+    }
+
+    /// Finds the Synthetic Monitoring datasource UID. Prefers
+    /// `/api/frontend/settings` (readable by any authenticated user, including
+    /// Viewer tokens) and only falls back to the admin-only `/api/datasources`
+    /// if that endpoint is unavailable. Returns nil when no SM datasource
+    /// exists — without hitting the admin endpoint in that common case.
+    private func findSyntheticDatasourceUID() async throws -> String? {
+        do {
+            let settings: FrontendSettings = try await request(path: "/api/frontend/settings")
+            return settings.datasources?.values
+                .first(where: { $0.type == "synthetic-monitoring-datasource" })?.uid
+        } catch {
+            let dataSources = try await getDataSources()
+            return dataSources.first(where: { $0.type == "synthetic-monitoring-datasource" })?.uid
+        }
+    }
+
+    /// The datasource most likely to hold Synthetic Monitoring metrics: a
+    /// Prometheus datasource. Uses `/api/frontend/settings` (non-admin) so the
+    /// stats overlay works on Viewer tokens too; falls back to the admin
+    /// `/api/datasources`. Best-effort — returns nil on any failure.
+    func prometheusDatasource() async -> (uid: String, type: String)? {
+        if let settings: FrontendSettings = try? await request(path: "/api/frontend/settings"),
+           let map = settings.datasources {
+            let candidates = map.values.filter { $0.type == "prometheus" }
+            if let ds = candidates.first, let uid = ds.uid {
+                return (uid, "prometheus")
+            }
+        }
+        guard let dataSources = try? await getDataSources() else { return nil }
+        let prom = dataSources.first(where: { $0.type == "prometheus" && $0.isDefault == true })
+            ?? dataSources.first(where: { $0.type == "prometheus" })
+        guard let ds = prom, let uid = ds.uid else { return nil }
+        return (uid, ds.type)
+    }
+
+    /// Runs an instant PromQL query and returns labeled samples. Best-effort:
+    /// returns `[]` on any error so callers can degrade gracefully.
+    func querySyntheticMetric(expr: String, datasourceUID: String, datasourceType: String) async -> [SyntheticMetricSample] {
+        let now = Int64(Date().timeIntervalSince1970 * 1000)
+        let queries: [[String: Any]] = [[
+            "refId": "A",
+            "datasource": ["uid": datasourceUID, "type": datasourceType],
+            "expr": expr,
+            "instant": true,
+            "maxDataPoints": 1
+        ]]
+        let body: [String: Any] = [
+            "queries": queries,
+            "from": "\(now - 3600000)",
+            "to": "\(now)"
+        ]
+
+        guard let baseURL = connection.baseURL else { return [] }
+        let url = baseURL.appendingPathComponent("/api/ds/query")
+        var urlRequest = URLRequest(url: url)
+        urlRequest.httpMethod = "POST"
+        if !connection.apiKey.isEmpty {
+            urlRequest.setValue("Bearer \(connection.apiKey)", forHTTPHeaderField: "Authorization")
+        }
+        urlRequest.setValue("application/json", forHTTPHeaderField: "Accept")
+        urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        urlRequest.httpBody = try? JSONSerialization.data(withJSONObject: body)
+
+        guard let (data, response) = try? await session.data(for: urlRequest),
+              let httpResponse = response as? HTTPURLResponse,
+              (200..<300).contains(httpResponse.statusCode),
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let results = json["results"] as? [String: Any],
+              let refDict = results["A"] as? [String: Any],
+              let frames = refDict["frames"] as? [[String: Any]] else {
+            return []
+        }
+
+        var samples: [SyntheticMetricSample] = []
+        for frame in frames {
+            guard let schema = frame["schema"] as? [String: Any],
+                  let fields = schema["fields"] as? [[String: Any]],
+                  let frameData = frame["data"] as? [String: Any],
+                  let columns = frameData["values"] as? [[Any]] else { continue }
+            let labels = Self.extractSeriesLabels(fields)
+            if let valueColumn = columns.last, let last = valueColumn.last,
+               let value = Self.numericValue(last) {
+                samples.append(SyntheticMetricSample(labels: labels, value: value))
+            }
+        }
+        return samples
+    }
+
+    private static func extractSeriesLabels(_ fields: [[String: Any]]) -> [String: String] {
+        for field in fields.reversed() {
+            if let labels = field["labels"] as? [String: String], !labels.isEmpty {
+                return labels
+            }
+        }
+        return [:]
+    }
+
+    private static func numericValue(_ value: Any) -> Double? {
+        if let d = value as? Double { return d }
+        if let i = value as? Int { return Double(i) }
+        if let s = value as? String { return Double(s) }
+        return nil
+    }
+
     // MARK: - Panel Data Query
 
     /// Queries a panel's datasource and returns the latest value(s) for stat/gauge widgets.
@@ -438,17 +563,24 @@ actor GrafanaAPIClient {
 
     // MARK: - Panel Embed URL
 
-    func panelEmbedURL(dashboardUID: String, panelID: Int, from: String = "now-6h", to: String = "now", theme: String = "dark") -> URL? {
+    func panelEmbedURL(dashboardUID: String, panelID: Int, from: String = "now-6h", to: String = "now", theme: String = "dark", variables: [String: [String]] = [:]) -> URL? {
         guard let base = connection.baseURL else { return nil }
         var components = URLComponents(url: base, resolvingAgainstBaseURL: false)
         components?.path = "/d-solo/\(dashboardUID)"
-        components?.queryItems = [
+        var items = [
             URLQueryItem(name: "orgId", value: "1"),
             URLQueryItem(name: "panelId", value: "\(panelID)"),
             URLQueryItem(name: "from", value: from),
             URLQueryItem(name: "to", value: to),
             URLQueryItem(name: "theme", value: theme),
         ]
+        // Template variables: `var-<name>=<value>`, repeated for multi-value.
+        for name in variables.keys.sorted() {
+            for value in variables[name] ?? [] {
+                items.append(URLQueryItem(name: "var-\(name)", value: value))
+            }
+        }
+        components?.queryItems = items
         return components?.url
     }
 

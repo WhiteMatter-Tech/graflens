@@ -1,6 +1,19 @@
-# GrafLens 2.0
+<p align="center">
+  <img src=".github/logo.png" alt="GrafLens" width="150" height="150">
+</p>
 
-A native iOS, iPadOS, and macOS app for viewing Grafana dashboards. Connect to any Grafana instance, browse your dashboards by folder, and view panels with full OIDC/OAuth support.
+<h1 align="center">GrafLens 2.0</h1>
+
+<p align="center">
+  A native iOS, iPadOS, and macOS app for viewing Grafana dashboards.<br>
+  Connect to any Grafana instance, browse your dashboards by folder, and view panels with full OIDC/OAuth support.
+</p>
+
+## Try the Beta
+
+Test the latest GrafLens builds via TestFlight:
+
+**[Join the beta on TestFlight →](https://testflight.apple.com/join/ZnHaWNhT)**
 
 ## Features
 
@@ -14,6 +27,8 @@ A native iOS, iPadOS, and macOS app for viewing Grafana dashboards. Connect to a
 - **Chart inspection** - Crosshair selection, accessible reading controls, series toggles, and built-in annotations
 - **Safe dashboard edits** - Preserve graph configuration and version checks when editing metadata
 - **OIDC/OAuth login** - Sign in via Authentik, Okta, or any OIDC provider for panel rendering
+- **Template variables** - Pick custom, interval, and textbox variable values from a bar above the dashboard
+- **Synthetic Monitoring** - Browse Grafana Synthetic Monitoring checks with live status, uptime, and latency
 - **Time range picker** - Switch between 5m, 1h, 6h, 24h, 7d, 30d ranges
 - **Data sources view** - See all configured data sources at a glance
 - **Full-screen panels** - Tap any panel to expand it

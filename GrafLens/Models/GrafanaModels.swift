@@ -66,6 +66,7 @@ struct DashboardDetail: Codable {
     var rows: [Row]? { document["rows"]?.decode() }
     var time: TimeRange? { document["time"]?.decode() }
     var refresh: RefreshValue? { document["refresh"]?.decode() }
+    var templating: Templating? { document["templating"]?.decode() }
 
     var allPanels: [Panel] { sections.flatMap(\.panels) }
     var hasNativeAnnotations: Bool {
@@ -233,6 +234,160 @@ struct Target: Codable {
     let expr: String?
     let rawSql: String?
     let datasource: FlexibleDatasource?
+}
+
+// MARK: - Template Variables
+
+struct Templating: Codable {
+    let list: [TemplateVariable]?
+}
+
+/// A dashboard template variable (`dashboard.templating.list[]`).
+struct TemplateVariable: Codable, Identifiable {
+    let name: String
+    let label: String?
+    let type: String?
+    let hide: Int?
+    let query: TemplateQuery?
+    let current: TemplateSelection?
+    let options: [TemplateOption]?
+    let multi: Bool?
+    let includeAll: Bool?
+    let allValue: String?
+    let datasource: FlexibleDatasource?
+
+    var id: String { name }
+
+    var displayLabel: String {
+        if let label = label, !label.isEmpty { return label }
+        return name
+    }
+
+    /// 0 = show label + control, 1 = show control only, 2 = do not render.
+    var hideMode: Int { hide ?? 0 }
+
+    var isMultiValue: Bool { multi ?? false }
+
+    /// Types that Phase 1 can resolve and edit purely from dashboard JSON.
+    /// `query` (needs datasource resolution), `datasource`, and multi-value
+    /// variables are rendered read-only until later phases.
+    var isEditable: Bool {
+        guard !isMultiValue else { return false }
+        switch type {
+        case "custom", "interval", "textbox": return true
+        default: return false
+        }
+    }
+
+    /// The selectable options for a custom/interval variable, preferring the
+    /// baked `options[]` and falling back to parsing the `query` string.
+    var resolvedOptions: [TemplateOption] {
+        if let options = options, !options.isEmpty {
+            return options.filter { $0.rawValue != "$__all" }
+        }
+        guard let raw = query?.stringValue, !raw.isEmpty else { return [] }
+        return raw.split(separator: ",").map { part -> TemplateOption in
+            let piece = part.trimmingCharacters(in: .whitespaces)
+            // Custom variables may be written as "Display : value".
+            if let range = piece.range(of: " : ") {
+                let text = String(piece[..<range.lowerBound]).trimmingCharacters(in: .whitespaces)
+                let value = String(piece[range.upperBound...]).trimmingCharacters(in: .whitespaces)
+                return TemplateOption(text: .single(text), value: .single(value), selected: nil)
+            }
+            return TemplateOption(text: .single(piece), value: .single(piece), selected: nil)
+        }
+    }
+
+    /// The variable's current value(s) from the dashboard JSON, used to seed
+    /// selection state before the user changes anything.
+    var defaultValues: [String] {
+        if let values = current?.value?.values, !values.isEmpty { return values }
+        if let constant = query?.stringValue, type == "constant" { return [constant] }
+        return []
+    }
+}
+
+/// A template variable's `query`, which is a string for custom/constant/
+/// textbox/interval/datasource variables and an object for query variables.
+enum TemplateQuery: Codable {
+    case string(String)
+    case object
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if let str = try? container.decode(String.self) {
+            self = .string(str)
+        } else {
+            self = .object
+        }
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        switch self {
+        case .string(let s): try container.encode(s)
+        case .object: try container.encodeNil()
+        }
+    }
+
+    var stringValue: String? {
+        if case .string(let s) = self { return s }
+        return nil
+    }
+}
+
+struct TemplateSelection: Codable {
+    let text: TemplateValue?
+    let value: TemplateValue?
+}
+
+struct TemplateOption: Codable, Hashable {
+    let text: TemplateValue?
+    let value: TemplateValue?
+    let selected: Bool?
+
+    var displayText: String { text?.display ?? value?.display ?? "" }
+    var rawValue: String { value?.display ?? text?.display ?? "" }
+}
+
+/// A template value that Grafana serializes as either a single string or, for
+/// multi-value variables, an array of strings.
+enum TemplateValue: Codable, Hashable {
+    case single(String)
+    case multiple([String])
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if let str = try? container.decode(String.self) {
+            self = .single(str)
+        } else if let arr = try? container.decode([String].self) {
+            self = .multiple(arr)
+        } else {
+            self = .single("")
+        }
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        switch self {
+        case .single(let s): try container.encode(s)
+        case .multiple(let a): try container.encode(a)
+        }
+    }
+
+    var values: [String] {
+        switch self {
+        case .single(let s): return s.isEmpty ? [] : [s]
+        case .multiple(let a): return a
+        }
+    }
+
+    var display: String {
+        switch self {
+        case .single(let s): return s
+        case .multiple(let a): return a.joined(separator: " + ")
+        }
+    }
 }
 
 // MARK: - Folder
@@ -460,6 +615,136 @@ struct MessageResponse: Codable {
 struct DashboardTagCount: Codable {
     let term: String
     let count: Int
+}
+
+// MARK: - Synthetic Monitoring
+
+/// A Synthetic Monitoring check, as returned by the SM datasource proxy
+/// (`/sm/check/list`). The check type is inferred from which key is present
+/// in `settings` (http, ping, dns, tcp, traceroute, ...).
+struct SyntheticCheck: Codable, Identifiable {
+    let id: Int
+    let job: String
+    let target: String
+    let enabled: Bool
+    let frequency: Int?
+    let probes: [Int]?
+    let labels: [SyntheticLabel]?
+    let settings: SyntheticSettings
+
+    var displayName: String { job.isEmpty ? target : job }
+
+    var checkType: String { settings.type }
+
+    var probeCount: Int { probes?.count ?? 0 }
+
+    /// Key used to join a check against its Prometheus series, which carry
+    /// `job` and `instance` (= target) labels.
+    var metricKey: String { SyntheticCheck.metricKey(job: job, instance: target) }
+
+    static func metricKey(job: String, instance: String) -> String {
+        "\(job)\u{1}\(instance)"
+    }
+
+    var frequencyDescription: String? {
+        guard let ms = frequency else { return nil }
+        let seconds = ms / 1000
+        if seconds >= 60 && seconds % 60 == 0 { return "\(seconds / 60)m" }
+        return "\(seconds)s"
+    }
+
+    var typeDisplayName: String {
+        switch checkType {
+        case "http": return "HTTP"
+        case "ping": return "Ping"
+        case "dns": return "DNS"
+        case "tcp": return "TCP"
+        case "traceroute": return "Traceroute"
+        case "grpc": return "gRPC"
+        case "multihttp": return "MultiHTTP"
+        case "scripted", "k6": return "Scripted"
+        case "browser": return "Browser"
+        default: return checkType.capitalized
+        }
+    }
+
+    var typeSymbolName: String {
+        switch checkType {
+        case "http", "multihttp": return "globe"
+        case "ping": return "wave.3.right"
+        case "dns": return "signpost.right"
+        case "tcp", "grpc": return "network"
+        case "traceroute": return "point.topleft.down.to.point.bottomright.curvepath"
+        case "scripted", "k6", "browser": return "curlybraces"
+        default: return "checkmark.shield"
+        }
+    }
+}
+
+struct SyntheticLabel: Codable, Hashable {
+    let name: String
+    let value: String
+}
+
+/// Decodes only the check type from the `settings` object by finding which
+/// known check-type key is present.
+struct SyntheticSettings: Codable {
+    let type: String
+
+    private static let knownTypes = [
+        "http", "ping", "dns", "tcp", "traceroute", "grpc",
+        "multihttp", "scripted", "k6", "browser"
+    ]
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: DynamicCodingKey.self)
+        for candidate in SyntheticSettings.knownTypes {
+            if let key = DynamicCodingKey(stringValue: candidate), container.contains(key) {
+                type = candidate
+                return
+            }
+        }
+        type = container.allKeys.first?.stringValue ?? "unknown"
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: DynamicCodingKey.self)
+        if let key = DynamicCodingKey(stringValue: type) {
+            try container.encodeNil(forKey: key)
+        }
+    }
+}
+
+struct DynamicCodingKey: CodingKey {
+    var stringValue: String
+    var intValue: Int? { nil }
+    init?(stringValue: String) { self.stringValue = stringValue }
+    init?(intValue: Int) { nil }
+}
+
+/// One labeled sample returned from an instant Prometheus query.
+struct SyntheticMetricSample {
+    let labels: [String: String]
+    let value: Double
+}
+
+/// Live status/uptime/latency for a single check, derived from Prometheus.
+struct SyntheticCheckStats {
+    var up: Bool?
+    var uptimePercent: Double?
+    var avgDurationSeconds: Double?
+}
+
+/// Subset of `/api/frontend/settings` used to discover datasources without
+/// the admin-only `/api/datasources` endpoint (available to any user).
+struct FrontendSettings: Codable {
+    let datasources: [String: FrontendDatasource]?
+}
+
+struct FrontendDatasource: Codable {
+    let type: String?
+    let uid: String?
+    let name: String?
 }
 
 // MARK: - Server Connection

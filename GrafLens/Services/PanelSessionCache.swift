@@ -25,6 +25,7 @@ struct PanelLoadRequest: Equatable {
     let panel: [String: JSONValue]
     let from: String
     let theme: String
+    var variables: [String: [String]] = [:]
     let native: Bool
     let annotations: Bool
     let refreshID: Int
@@ -96,7 +97,7 @@ struct PanelLoadRequest: Equatable {
             response.fallbackReason = "Grafana rendering preserves this panel's queries, transformations, annotations, and display settings."
         }
         response.webURL = await client.panelEmbedURL(dashboardUID: request.dashboardUID, panelID: panel.id,
-            from: request.from, theme: request.theme)
+            from: request.from, theme: request.theme, variables: request.variables)
         if response.webURL == nil { response.error = "This server's panel URL is invalid." }
         return response
     }

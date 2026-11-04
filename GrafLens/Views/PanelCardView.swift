@@ -8,6 +8,7 @@ struct PanelCardView: View {
     var refreshID = 0
     var allowsNative = true
     var includeAnnotations = false
+    var variables: [String: [String]] = [:]
     var expanded = false
     var onExpand: (() -> Void)?
     @EnvironmentObject private var connectionManager: ConnectionManager
@@ -35,10 +36,10 @@ struct PanelCardView: View {
     private var theme: String { colorScheme == .dark ? "dark" : "light" }
     init(panel: Panel, dashboardUID: String, timeRange: TimeRangeOption,
          refreshID: Int = 0, allowsNative: Bool = true, includeAnnotations: Bool = false,
-         expanded: Bool = false, cache: PanelSessionCache, onExpand: (() -> Void)? = nil) {
+         variables: [String: [String]] = [:], expanded: Bool = false, cache: PanelSessionCache, onExpand: (() -> Void)? = nil) {
         self.panel = panel; self.dashboardUID = dashboardUID; self.timeRange = timeRange
         self.refreshID = refreshID; self.allowsNative = allowsNative; self.includeAnnotations = includeAnnotations
-        self.expanded = expanded; self.onExpand = onExpand
+        self.variables = variables; self.expanded = expanded; self.onExpand = onExpand
         let model = cache.model(for: panel.id)
         _model = ObservedObject(wrappedValue: model)
         _webState = ObservedObject(wrappedValue: model.webState)
@@ -46,7 +47,7 @@ struct PanelCardView: View {
 
     private var identity: PanelLoadRequest {
         PanelLoadRequest(connectionID: connectionManager.activeConnection?.id, dashboardUID: dashboardUID,
-            panel: panel.document, from: timeRange.rawValue, theme: theme,
+            panel: panel.document, from: timeRange.rawValue, theme: theme, variables: variables,
             native: allowsNative && !model.forceGrafana, annotations: includeAnnotations,
             refreshID: refreshID, localRefresh: model.localRefresh, sessionRevision: webAuthManager.sessionRevision)
     }
@@ -342,7 +343,7 @@ struct PanelCardView: View {
 
     private func openOriginal() {
         Task {
-            guard let url = await connectionManager.apiClient?.panelEmbedURL(dashboardUID: dashboardUID, panelID: panel.id, from: timeRange.rawValue, theme: theme) else { return }
+            guard let url = await connectionManager.apiClient?.panelEmbedURL(dashboardUID: dashboardUID, panelID: panel.id, from: timeRange.rawValue, theme: theme, variables: variables) else { return }
             await UIApplication.shared.open(url)
         }
     }
@@ -361,6 +362,7 @@ struct PanelFullScreenView: View {
     let panels: [Panel]
     let allowsNative: Bool
     let includeAnnotations: Bool
+    let variables: [String: [String]]
     @Environment(\.dismiss) private var dismiss
     @State private var timeRange: TimeRangeOption
     @State private var currentIndex: Int
@@ -368,8 +370,9 @@ struct PanelFullScreenView: View {
     @StateObject private var panelCache = PanelSessionCache()
     @State private var refreshID = 0
     @State private var showAnnotation = false
-    init(panel: Panel, dashboardUID: String, timeRange: TimeRangeOption, panels: [Panel] = [], allowsNative: Bool = true, includeAnnotations: Bool = false) {
+    init(panel: Panel, dashboardUID: String, timeRange: TimeRangeOption, panels: [Panel] = [], allowsNative: Bool = true, includeAnnotations: Bool = false, variables: [String: [String]] = [:]) {
         self.panel = panel; self.dashboardUID = dashboardUID; self.panels = panels; self.allowsNative = allowsNative; self.includeAnnotations = includeAnnotations
+        self.variables = variables
         _timeRange = State(initialValue: timeRange)
         _currentIndex = State(initialValue: panels.firstIndex(where: { $0.id == panel.id }) ?? 0)
     }
@@ -377,7 +380,7 @@ struct PanelFullScreenView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                PanelCardView(panel: currentPanel, dashboardUID: dashboardUID, timeRange: timeRange, refreshID: refreshID, allowsNative: allowsNative, includeAnnotations: includeAnnotations, expanded: true, cache: panelCache)
+                PanelCardView(panel: currentPanel, dashboardUID: dashboardUID, timeRange: timeRange, refreshID: refreshID, allowsNative: allowsNative, includeAnnotations: includeAnnotations, variables: variables, expanded: true, cache: panelCache)
                     .id(currentPanel.id).padding()
             }
             .background(Color(.systemGroupedBackground))

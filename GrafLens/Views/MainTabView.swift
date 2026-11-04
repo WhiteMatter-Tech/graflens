@@ -26,6 +26,9 @@ struct MainTabView: View {
             Tab("Alerts", systemImage: "bell.badge", value: .alerts) {
                 AlertsView()
             }
+            Tab("Synthetics", systemImage: "waveform.path.ecg", value: .synthetics) {
+                SyntheticsView()
+            }
             Tab("Data Sources", systemImage: "server.rack", value: .dataSources) {
                 DataSourcesView()
             }
@@ -72,6 +75,11 @@ struct MainTabView: View {
                     Label("Alerts", systemImage: "bell.badge")
                 }
 
+            SyntheticsView()
+                .tabItem {
+                    Label("Synthetics", systemImage: "waveform.path.ecg")
+                }
+
             DataSourcesView()
                 .tabItem {
                     Label("Data Sources", systemImage: "server.rack")
@@ -101,6 +109,8 @@ struct MainTabView: View {
                         .tag(SidebarTab.dashboards)
                     Label("Alerts", systemImage: "bell.badge")
                         .tag(SidebarTab.alerts)
+                    Label("Synthetics", systemImage: "waveform.path.ecg")
+                        .tag(SidebarTab.synthetics)
                     Label("Data Sources", systemImage: "server.rack")
                         .tag(SidebarTab.dataSources)
                 }
@@ -127,6 +137,8 @@ struct MainTabView: View {
                 DashboardListView()
             case .alerts:
                 AlertsView()
+            case .synthetics:
+                SyntheticsView()
             case .dataSources:
                 DataSourcesView()
             case .folders:
@@ -147,5 +159,5 @@ struct MainTabView: View {
 }
 
 enum SidebarTab: String, Hashable {
-    case dashboards, alerts, dataSources, folders, playlists, snapshots, settings
+    case dashboards, alerts, synthetics, dataSources, folders, playlists, snapshots, settings
 }
