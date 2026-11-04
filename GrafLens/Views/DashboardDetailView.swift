@@ -32,29 +32,43 @@ struct DashboardDetailView: View {
                 }
             } else {
                 GeometryReader { geometry in
+                    let layout = dashboardLayout(in: geometry)
                     ScrollView {
                         // Mount every card immediately so native requests and Grafana
                         // pages start together, including rows below the viewport.
                         VStack(alignment: .leading, spacing: 24) {
                             dashboardSummary
+                                .frame(width: layout.division == nil ? nil : layout.trailingWidth)
+                                .frame(maxWidth: .infinity, alignment: .trailing)
                             ForEach(viewModel.dashboard?.sections ?? []) { section in
                                 VStack(alignment: .leading, spacing: 16) {
                                     if let title = section.title {
                                         Text(title).font(.title3.weight(.semibold)).padding(.horizontal, 4)
+                                            .frame(width: layout.division == nil ? nil : layout.trailingWidth, alignment: .leading)
+                                            .frame(maxWidth: .infinity, alignment: .trailing)
                                     }
-                                    ForEach(layoutRows(section.panels, width: geometry.size.width), id: \.id) { row in
-                                        HStack(alignment: .top, spacing: row.isNumberRow ? 12 : 16) {
-                                            ForEach(row.panels) { panel in
-                                                PanelCardView(panel: panel, dashboardUID: viewModel.dashboardUID, timeRange: selectedTimeRange,
-                                                    refreshID: refreshID, allowsNative: allowsNative, includeAnnotations: viewModel.dashboard?.hasNativeAnnotations ?? false,
-                                                    cache: panelCache, onExpand: { HapticManager.light(); selectedPanel = panel })
-                                                    .frame(maxWidth: .infinity)
-                                            }
-                                            // Keep an odd final metric tile the same width as its neighbors.
-                                            ForEach(0..<(row.isNumberRow ? row.capacity - row.panels.count : 0), id: \.self) { _ in
-                                                Color.clear.frame(maxWidth: .infinity, maxHeight: 0)
+                                    ForEach(layoutRows(section.panels, layout: layout), id: \.id) { row in
+                                        let spacing: CGFloat = row.isNumberRow ? 12 : 16
+                                        HStack(alignment: .top, spacing: 0) {
+                                            ForEach(0..<row.capacity, id: \.self) { index in
+                                                Group {
+                                                    if index < row.panels.count {
+                                                        let panel = row.panels[index]
+                                                        PanelCardView(panel: panel, dashboardUID: viewModel.dashboardUID, timeRange: selectedTimeRange,
+                                                            refreshID: refreshID, allowsNative: allowsNative, includeAnnotations: viewModel.dashboard?.hasNativeAnnotations ?? false,
+                                                            cache: panelCache, onExpand: { HapticManager.light(); selectedPanel = panel })
+                                                            .id(panel.id)
+                                                    } else {
+                                                        Color.clear.frame(height: 0)
+                                                    }
+                                                }
+                                                .frame(width: layout.panelWidth(at: index, capacity: row.capacity, spacing: spacing))
+                                                if index < row.capacity - 1 {
+                                                    Color.clear.frame(width: layout.gap(after: index, capacity: row.capacity, spacing: spacing), height: 0)
+                                                }
                                             }
                                         }
+                                        .frame(maxWidth: .infinity, alignment: .trailing)
                                     }
                                 }
                             }
@@ -139,7 +153,21 @@ struct DashboardDetailView: View {
         await viewModel.loadDashboard(client: connectionManager.apiClient)
         refreshID += 1
     }
-    private func layoutRows(_ panels: [Panel], width: CGFloat) -> [PanelLayoutRow] {
+    private func dashboardLayout(in geometry: GeometryProxy) -> DashboardLayout {
+        if #available(iOS 27.1, *) {
+            // Horizontal folds remain under the system ScrollView's handling.
+            // For a book pose, keep each card entirely on one side of the fold.
+            let division = geometry.reservedRegions(kind: .division).first {
+                $0.frame.height > $0.frame.width
+            }.map { region in
+                region.frame.insetBy(dx: -max(region.margins.leading, region.margins.trailing), dy: 0)
+            }
+            return DashboardLayout(width: geometry.size.width, division: division)
+        }
+        return DashboardLayout(width: geometry.size.width)
+    }
+
+    private func layoutRows(_ panels: [Panel], layout: DashboardLayout) -> [PanelLayoutRow] {
         var rows: [PanelLayoutRow] = []
         var pending: [Panel] = []
         var previousCapacity = 0
@@ -148,10 +176,7 @@ struct DashboardDetailView: View {
             let compact = panel.isNumberPanel || (panel.type == "gauge" && allowsNative && NativePanelConfiguration.supported(panel) != nil)
             let gauge = ["gauge", "bargauge"].contains(panel.type ?? "")
             let wide = ["table", "logs", "text", "geomap"].contains(panel.type ?? "") || (panel.gridPos?.w ?? 12) >= 18
-            let capacity = typeSize.isAccessibilitySize ? 1 : compact
-                ? (width < 320 ? 1 : max(2, min(4, Int((width - 28) / 180))))
-                : wide ? 1 : gauge ? max(1, min(3, Int((width - 40) / 220)))
-                : max(1, min(2, Int(width / 440)))
+            let capacity = layout.capacity(compact: compact, gauge: gauge, wide: wide, accessible: typeSize.isAccessibilitySize)
             if capacity != previousCapacity || compact != previousNumberRow || pending.count == capacity {
                 if !pending.isEmpty {
                     rows.append(PanelLayoutRow(panels: pending, capacity: previousCapacity, isNumberRow: previousNumberRow))

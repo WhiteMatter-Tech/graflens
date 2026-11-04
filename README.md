@@ -8,6 +8,7 @@ A native iOS, iPadOS, and macOS app for viewing Grafana dashboards. Connect to a
 - **Dashboard browser** - Browse all dashboards organized by folder with search
 - **Native charts** - Interactive time-series, stat, and gauge rendering for supported Prometheus panels, with Grafana fallback
 - **Adaptive dashboards** - Refined chart cards, compact metric tiles, and layouts for iPhone, iPad, and Mac
+- **iPhone Duo layouts** - Adaptive tabs/sidebar preserve navigation across size changes; book-pose panel rows leave room for the hinge
 - **Reliable refresh** - Time-range and appearance updates, manual refresh, and optional foreground auto-refresh
 - **Panel viewer** - View complex panels through embedded Grafana views with loading, retry, and browser sign-in support
 - **Chart inspection** - Crosshair selection, accessible reading controls, series toggles, and built-in annotations
@@ -24,7 +25,7 @@ See [the 2.0 release notes](V2_RELEASE_NOTES.md) for supported native configurat
 ## Requirements
 
 - iOS 17.0+ / iPadOS 17.0+ / macOS 14.0+ (Catalyst)
-- Xcode 15.0+
+- Xcode 27.1+ (iOS 27.1 SDK for Duo reserved-region support)
 - A Grafana instance with a Service Account token
 
 ## Getting Started

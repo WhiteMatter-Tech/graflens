@@ -8,6 +8,26 @@ struct RegressionTests {
     }
     static func json(_ text: String) throws -> JSONValue { try JSONDecoder().decode(JSONValue.self, from: Data(text.utf8)) }
     static func main() throws {
+        // Viewport and hinge examples are synthetic; no physical device dimensions assumed.
+        let phoneLayout = DashboardLayout(width: 390)
+        check(phoneLayout.capacity(compact: true, gauge: false, wide: false, accessible: false) == 2, "Compact phone metrics should fit two columns")
+        check(phoneLayout.capacity(compact: false, gauge: false, wide: false, accessible: false) == 1, "Phone charts must remain readable")
+        check(phoneLayout.capacity(compact: true, gauge: false, wide: true, accessible: false) == 2, "Number panels should retain compact tiles regardless of Grafana grid span")
+        let narrowLayout = DashboardLayout(width: 280)
+        check(narrowLayout.capacity(compact: true, gauge: false, wide: false, accessible: false) == 1, "Narrow windows should use one metric column")
+        let openLayout = DashboardLayout(width: 744)
+        check(openLayout.capacity(compact: false, gauge: false, wide: false, accessible: false) == 2, "Open viewports should fit two charts")
+        let bookLayout = DashboardLayout(width: 940, division: CGRect(x: 440, y: 0, width: 60, height: 700))
+        let bookCapacity = bookLayout.capacity(compact: true, gauge: false, wide: false, accessible: false)
+        check(bookCapacity == 4, "Book metrics should use an even number of columns")
+        let tile = bookLayout.panelWidth(at: 0, capacity: bookCapacity, spacing: 12)
+        check(tile * 2 + 12 == bookLayout.leadingWidth, "Leading tiles must end before the hinge")
+        check(bookLayout.gap(after: 1, capacity: 4, spacing: 12) == 60, "Center spacing must clear the hinge")
+        check(bookLayout.panelWidth(at: 0, capacity: 1, spacing: 16) == bookLayout.trailingWidth, "Wide panels must stay within a usable region")
+        check(bookLayout.capacity(compact: true, gauge: false, wide: false, accessible: true) == 1, "Accessibility sizes must use one card per row")
+        check(openLayout.capacity(compact: true, gauge: false, wide: false, accessible: false) == 4, "Unfolding should restore normal metric capacity")
+        check(DashboardLayout(width: 0).panelWidth(at: 0, capacity: 1, spacing: 16) == 0, "Transient zero-width viewports must remain valid")
+
         let original = try json(#"{"id":1,"uid":"test","title":"Before","version":7,"schemaVersion":39,"templating":{"list":[{"name":"host"}]},"annotations":{"list":[]},"pluginSetting":{"keep":true},"panels":[{"id":1,"type":"timeseries","title":"Temperature","fieldConfig":{"defaults":{"unit":"fahrenheit"}},"options":{"legend":{"showLegend":true}},"transformations":[{"id":"organize"}],"targets":[{"refId":"A","expr":"temperature","legendFormat":"Room"}]}]}"#)
         let dashboard = DashboardDetail(document: original.object!)
         let edited = dashboard.updatingMetadata(title: "After", description: "New description", tags: ["important"])

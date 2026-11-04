@@ -4,6 +4,8 @@ Version: **2.0**, build **2000**, for both the app and its iOS widget extension.
 
 ## Interface and charts
 
+- iPhone Duo preparation: iOS 18+ uses a single adaptive tab/sidebar container so changing size classes does not replace the browsing tree. Dashboard rows measure their current safe viewport; iOS 27.1 book-pose layouts query the active division region and its margins, place cards on either side of the hinge, and constrain wide panels and headings to the trailing region. Accessibility sizes retain one card per row. System navigation, sheets, and scroll containers handle their own adaptive presentation. Build with Xcode 27.1+; the deployment minimum remains iOS 17.
+
 - Redesigned panel cards with restrained borders, clearer readings, wrapping titles, accessible action controls, and explicit expansion.
 - Native Swift Charts for supported Prometheus time-series and stat panels, plus native gauges with configured bounds. Time-series charts offer stable series colors, solid/dashed lines, legend toggles, a crosshair, an accessible reading slider, and annotation details.
 - Null samples break chart paths instead of becoming zeros or connecting across missing observations. Isolated readings remain visible.
@@ -40,7 +42,7 @@ Existing widgets need their dashboard and panel reselected after this upgrade be
 
 ## Validation
 
-- 59 passing Foundation regression checks: dashboard round trips, version protection, section preservation, rendering eligibility, annotations, schema-aware numeric fields, null gaps, query errors, number formatting, time-range parsing, and authentication-response classification.
+- 71 passing Foundation regression checks (including narrow, expanded, book-pose, accessibility, and zero-width layout cases): dashboard round trips, version protection, section preservation, rendering eligibility, annotations, schema-aware numeric fields, null gaps, query errors, number formatting, time-range parsing, and authentication-response classification.
 - Authentication HTTP integration: successful JSON, a rejected credential, a followed browser-login redirect, POST permission denial, and an HTML DELETE response. Run `Tests/run-auth-error-tests.sh`; its isolated fixture uses localhost port 18768. These checks do not replace testing a live Authentik deployment.
 - Local API integration: five-minute and six-hour requests, multi-series decoding, gaps, template fallback, and embed URL range/theme parameters.
 - 37 simulator panel-cache and rendering checks: repeated appearances produce no extra native or web requests; in-flight loads finish offscreen; interactive web state survives reattachment; refresh and request changes invalidate cached content; superseded requests cannot overwrite newer results; closing a screen releases its sessions and pages; delayed rendering, bounded blank-page recovery, simulated process termination callbacks, viewport sizing, and replacement-host ownership are verified. Run `Tests/run-panel-cache-tests.sh` with a booted simulator (optionally set `SIMULATOR_ID`). The harness uses an isolated localhost fixture on port 18765 and removes its test app afterward.
@@ -53,3 +55,7 @@ Existing widgets need their dashboard and panel reselected after this upgrade be
 Run `Tests/run-regressions.sh` for the deterministic regression checks. For local API and simulator checks, start `python3 Tests/fixture_server.py`; it binds only to localhost and rejects dashboard writes. Compile `Tests/APIIntegrationTests.swift` with `GrafanaModels.swift`, `NativePanelData.swift`, and `GrafanaAPIClient.swift`, then run the resulting executable. Debug builds accept `--fixture-server http://127.0.0.1:18764 --fixture-dashboard` to open the fixture dashboard. The launch override is absent from Release builds.
 
 No App Store submission, release signing, or live Grafana dashboard modification was performed.
+
+### Duo validation limits
+
+The local SDK is iOS 27.1, but installed Simulator runtimes end at iOS 27.0. Creating an iPhone Duo simulator with that runtime is rejected as incompatible. The layout regression checks use synthetic viewports and hinge frames; physical folding, horizontal table poses, camera activation, and transitions with menus or sheets open still require acceptance testing on an iOS 27.1 Duo simulator or device.

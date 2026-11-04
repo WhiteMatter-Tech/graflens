@@ -22,7 +22,9 @@ class ConnectionManager: ObservableObject {
         let args = ProcessInfo.processInfo.arguments
         if let index = args.firstIndex(of: "--fixture-server"), args.indices.contains(index + 1),
            let url = URL(string: args[index + 1]), ["localhost", "127.0.0.1"].contains(url.host ?? "") {
-            let connection = ServerConnection(id: UUID(uuidString: "00000000-0000-0000-0000-000000000002")!, name: "Design preview", url: url.absoluteString, useServiceAccount: false)
+            let nameIndex = args.firstIndex(of: "--fixture-name").map { args.index(after: $0) }
+            let name = nameIndex.flatMap { args.indices.contains($0) ? args[$0] : nil } ?? "Design preview"
+            let connection = ServerConnection(id: UUID(uuidString: "00000000-0000-0000-0000-000000000002")!, name: name, url: url.absoluteString, useServiceAccount: false)
             connections = [connection]; activeConnection = connection; isConnected = true
             return
         }
