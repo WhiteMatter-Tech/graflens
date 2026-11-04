@@ -44,6 +44,8 @@ struct RegressionTests {
         check(annotated.allowsNativeRendering && annotated.hasNativeAnnotations, "Built-in annotations should be supported")
         let customAnnotated = DashboardDetail(document: try json(#"{"annotations":{"list":[{"enable":true,"expr":"custom"}]}}"#).object!)
         check(!customAnnotated.allowsNativeRendering, "Custom annotation queries need Grafana")
+        let malformedVariables = try JSONDecoder().decode(DashboardDetail.self, from: Data(#"{"title":"Vars","templating":{"list":[{"label":"no name"}]},"panels":[{"id":1,"type":"stat"}]}"#.utf8))
+        check(malformedVariables.templating == nil && malformedVariables.allPanels.count == 1, "Malformed template variables must not fail dashboard loading")
 
         let nested = DashboardDetail(document: try json(#"{"panels":[{"id":1,"type":"stat"},{"id":2,"type":"row","title":"Room","panels":[{"id":3,"type":"text"}]},{"id":4,"type":"timeseries"}]}"#).object!)
         check(nested.sections.count == 2, "Row grouping lost")
